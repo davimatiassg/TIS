@@ -19,7 +19,8 @@ fnt_comicsans = pg.font.SysFont('Comic Sans MS', 30)
 
 #VARIAVEIS GLOBAIS
 RODANDO = True
-key = [False,False,False,False] #lista ulitlizada na movimentação do jogador
+key = [False,False,False,False] #lista ulitlizada na movimentação do jogador1
+key2 = [False,False,False,False] #lista ulitlizada na movimentação do jogador2
 FPS = 64 #ITS 64 BECAUSE YES (dont change)
 VERYSMALL = 0.001
 VERBIG = 10**5
@@ -216,7 +217,7 @@ class effect(object):
 
         else:
             efeitos.remove(self)
-            del self
+            efeitos_deposito.append(self)
 
     def draw(self):
         window.blit(self.sprite, (self.x, self.y))
@@ -230,6 +231,24 @@ font_ = fnt_comicsans,color_ = WHITE,centered_ = True):
     text_surface = font_.render(txt_, False, color_)
     window.blit(text_surface,(x_,y_))
 
+def create_effect(sprite_,x_,y_,alive_time_,speed_ = 0,direction_ = 0):
+    if len(efeitos_deposito) > 0:
+        #Se ja tem um efeito salvo na memoria re-utltilize ele
+        efeito_reciclado = efeitos_deposito[0]
+
+        efeito_reciclado.sprite = sprite_
+        efeito_reciclado.x = x_
+        efeito_reciclado.y = y_
+        efeito_reciclado.alive_time = alive_time_
+        efeito_reciclado.speed = speed_
+        efeito_reciclado.direction = direction_
+
+        efeitos_deposito.pop(0)
+        efeitos.append(efeito_reciclado)
+    else:
+        #cria um efeito novo
+        efeitos.append(effect(sprite_,x_,y_,alive_time_,speed_ = speed_,direction_ = direction_))
+
 #CRIANDO OS BLOCOS
 blocos = []
 blocos.append(obj_bloco(spr_bloco,256,window_height - spr_bloco.get_height()))
@@ -241,10 +260,13 @@ blocos.append(obj_bloco(spr_bloco,window_width - 256 + 50,window_height - 256 - 
 
 #CRIANDO ADEMAIS
 efeitos = []
+efeitos_deposito = []
 
 #CRIANDO OS JOAGDORES
 jogador1 = obj_jogador(spr_homi,0,0)
+jogador2 = obj_jogador(spr_homi,100,0)
 dash = False
+dash2 = False
 
 while RODANDO: #game loop
 
@@ -259,6 +281,9 @@ while RODANDO: #game loop
     #---CODIGO DO JOGADOR
     jogador1.step()
     jogador1.draw()
+
+    jogador2.step()
+    jogador2.draw()
 
     for k in range(len(key)): #movimentando o personagem com base no input
         #k = 0 é A
@@ -278,21 +303,55 @@ while RODANDO: #game loop
 
             if k == 3: jogador1.y += 0
 
+    for k in range(len(key2)): #movimentando o personagem com base no input
+        #k = 0 é A
+        #k = 1 é D
+        #k = 2 é W
+        #k = 3 é S
+        if key2[k]:
+            if k == 0 and jogador2.hspeed > -jogador2.lower_max_hspeed:
+                jogador2.hspeed -= jogador2.hacel
+                jogador2.last_direction_moved = -1
+            if k == 1 and jogador2.hspeed < jogador2.lower_max_hspeed:
+                jogador2.hspeed += jogador2.hacel
+                jogador2.last_direction_moved = +1
+
+            if jogador2.on_ground == True:
+                if k == 2: jogador2.vspeed -= jogador2.jump
+
+            if k == 3: jogador2.y += 0
+
     if dash == True:
         jogador1.hspeed += 1.75*jogador1.last_direction_moved
 
         dir_ = 180*(jogador1.hspeed > 0)
 
-        efeitos.append(effect(spr_homi[0],jogador1.x,jogador1.y,
-        8,speed_ = 10,direction_ = dir_))
+        create_effect(spr_homi[0],jogador1.x,jogador1.y,
+        8,speed_ = 10,direction_ = dir_)
 
-        efeitos.append(effect(spr_homi[0],jogador1.x + 10*fs.sign(jogador1.hspeed),jogador1.y,
-        8,speed_ = 9,direction_ = dir_))
+        create_effect(spr_homi[0],jogador1.x + 10*fs.sign(jogador1.hspeed),jogador1.y,
+        8,speed_ = 9,direction_ = dir_)
 
-        efeitos.append(effect(spr_homi[0],jogador1.x + 20*fs.sign(jogador1.hspeed),jogador1.y,
-        8,speed_ = 8,direction_ = dir_))
+        create_effect(spr_homi[0],jogador1.x + 20*fs.sign(jogador1.hspeed),jogador1.y,
+        8,speed_ = 8,direction_ = dir_)
 
         dash = False
+
+    if dash2 == True:
+        jogador2.hspeed += 1.75*jogador2.last_direction_moved
+
+        dir_ = 180*(jogador2.hspeed > 0)
+
+        create_effect(spr_homi[0],jogador2.x,jogador2.y,
+        8,speed_ = 10,direction_ = dir_)
+
+        create_effect(spr_homi[0],jogador2.x + 10*fs.sign(jogador2.hspeed),jogador2.y,
+        8,speed_ = 9,direction_ = dir_)
+
+        create_effect(spr_homi[0],jogador2.x + 20*fs.sign(jogador2.hspeed),jogador2.y,
+        8,speed_ = 8,direction_ = dir_)
+
+        dash2 = False
 
     #---CODIGOS ALEATORIOS
     for f in efeitos:
@@ -325,6 +384,17 @@ while RODANDO: #game loop
             if eventos.key == pg.K_q:
                 dash = True
 
+            if eventos.key == pg.K_LEFT:
+                key2[0] = True
+            if eventos.key == pg.K_RIGHT:
+                key2[1] = True
+            if eventos.key == pg.K_UP:
+                key2[2] = True
+            if eventos.key == pg.K_DOWN:
+                key2[3] = True
+            if eventos.key == pg.K_KP1:
+                dash2 = True
+
         #SOLTOU A TECLA
         if eventos.type == pg.KEYUP:
 
@@ -336,6 +406,17 @@ while RODANDO: #game loop
                 key[2] = False
             if eventos.key == pg.K_s:
                 key[3] = False
+
+            if eventos.key == pg.K_LEFT:
+                key2[0] = False
+            if eventos.key == pg.K_RIGHT:
+                key2[1] = False
+            if eventos.key == pg.K_UP:
+                key2[2] = False
+            if eventos.key == pg.K_DOWN:
+                key2[3] = False
+            if eventos.key == pg.K_KP1:
+                dash2 = False
 
         #FECHOU A JANELA
         if eventos.type == pg.QUIT:
