@@ -2,7 +2,7 @@
 import pygame as pg
 import ctypes
 import fs
-import animation as an
+import math
 
 #SETUP DA TELA (só mexa no width e height)
 window_width = 1280
@@ -14,30 +14,40 @@ true_res = (int( ctypes.windll.user32.GetSystemMetrics(0)/(1920/(window_width)))
             int( ctypes.windll.user32.GetSystemMetrics(1)/(1080/(window_height))) )
 window = pg.display.set_mode(true_res)
 
+pg.font.init()
+fnt_comicsans = pg.font.SysFont('Comic Sans MS', 30)
+
 #VARIAVEIS GLOBAIS
 RODANDO = True
 key = [False,False,False,False] #lista ulitlizada na movimentação do jogador
 FPS = 64 #ITS 64 BECAUSE YES (dont change)
 VERYSMALL = 0.001
 VERBIG = 10**5
+WHITE = (255,255,255)
+BLACK = (0  ,0  ,0  )
 
-
+#IMPORTANTO SPRITES E ETC GRÁFICOS
+spr_homi = [
+pg.image.load('Graphics\spr_homi1.png').convert_alpha(),
+pg.image.load('Graphics\spr_homi2.png').convert_alpha(),
+pg.image.load('Graphics\spr_homi3.png').convert_alpha()]
 
 spr_bloco = pg.image.load('Graphics\sbloco.png').convert_alpha()
 
-#OBJETOS / CLASSES
+#OBJETOS / CLASSES / FUNÇÕES
 class obj_jogador(object):
-    def __init__(self,x,y):
-        moves = ['run']
-        self.anim = an.Animator(moves, 'homi', 'char_')
+    def __init__(self,spr,x,y):
         #Caracteristicas do obj definidas na criação
+        self.sprite = spr
+        self.hit_box = pg.Rect(x,y,spr[0].get_height(),spr[0].get_width())
         self.x = x
         self.y = y
-        self.hit_box = pg.Rect(x,y, anim.playFrame('walk', 0).get_height(),anim.playFrame('walk', 0).get_width())
 
         #Caracteristicas gerais do obj
         self.hspeed = 0 #velocidade horizontal
         self.vspeed = 0 #velocidade vertical
+        self.speed = 0 #velocidade total
+        self.direction = 0 #direção (vetores)
         self.max_hspeed = 5 #velocidade horizontal máxima (em módulo)
         self.lower_max_hspeed = 1 #"walk speed" máxima (em módulo)
         self.max_vspeed = 5 #velocidade vertical máxima (em módulo)
@@ -48,8 +58,7 @@ class obj_jogador(object):
         self.on_ground = False #boolean: está no chão?
         self.sprite_index = 0 #index atual do sprite
         self.load_sprite_index = 0 #variavel que serve para loopar o sprite_index
-
-
+        self.last_direction_moved = 1 #Variavel que guarda a última direção que o jogador quiz se mover
 
     def step(self): #função que executa o cógido geral do jogador
 
@@ -77,7 +86,7 @@ class obj_jogador(object):
         #Passa por cada ponto (menos os da borda) da parte mais esquerda ou direita do retângulo
         collided_horizontally = False
         for h_ in range(self.hit_box.height):
-            var_colisao = fs.collisionList(blocos, (side_ + self.hspeed*dt,self.hit_box.y + h_))
+            var_colisao = fs.collision_list(blocos, (side_ + self.hspeed*dt,self.hit_box.y + h_))
 
             if var_colisao[0] == True:
 
@@ -113,7 +122,7 @@ class obj_jogador(object):
         #Passa por cada ponto (menos os da borda) da parte mais em baixo ou em cima do retângulo
         collided_vertically = False
         for w_ in range(self.hit_box.width - 1):
-            var_colisao = fs.collisionList(blocos,(self.hit_box.x + w_ + 1,side_ + self.vspeed*dt))
+            var_colisao = fs.collision_list(blocos,(self.hit_box.x + w_ + 1,side_ + self.vspeed*dt))
 
             if var_colisao[0] == True:
                 collidee = var_colisao[1] #Colidido da collision_list || "collidee" é o colidido
@@ -157,15 +166,20 @@ class obj_jogador(object):
 
         if abs(self.hspeed) > self.max_hspeed: self.hspeed = self.max_hspeed*fs.sign(self.hspeed) #max speed
 
+        #vetores muahaha
+        self.speed = (self.hspeed**2 + self.vspeed**2 )**(1/2)
+        self.direction = 360*(1/(2*math.pi))*(self.speed)
 
     def draw(self): #função que desenha o jogador na tela
-        spr = self.anim.playFrame('walk', 0)
-        
+
         #Animation loop
         if abs(self.hspeed) > 0:
-            spr = self.anim.play('walk')
+            self.load_sprite_index = fs.loop_value(self.load_sprite_index,0,len(self.sprite) - VERYSMALL,10/FPS)
+            self.sprite_index = int(self.load_sprite_index)
+        else:
+            self.sprite_index = 0
 
-        window.blit(spr, (self.x, self.y))
+        window.blit(self.sprite[self.sprite_index], (self.x, self.y))
 
 class obj_bloco(object):
     def __init__(self,spr,x,y):
@@ -181,6 +195,41 @@ class obj_bloco(object):
     def draw(self): #função que desenha o obj na tela
         window.blit(self.sprite, (self.x, self.y))
 
+class effect(object):
+    def __init__(self,spr,x,y,alive_time,
+    speed_ = 0,direction_ = 0):
+        #Caracteristicas do obj definidas na criação
+        self.sprite = spr
+        self.x = x
+        self.y = y
+        self.alive_time = alive_time #Em frames
+        self.speed = speed_
+        self.direction = direction_
+
+        #Caracteristicas gerais do obj
+    def step(self):
+        if self.alive_time > 0:
+            self.alive_time -= 1
+
+            self.x += self.speed*math.cos(self.direction*(2*math.pi/360))
+            self.y += self.speed*math.sin(self.direction*(2*math.pi/360))
+
+        else:
+            efeitos.remove(self)
+            del self
+
+    def draw(self):
+        window.blit(self.sprite, (self.x, self.y))
+
+def draw_text(txt_,x_,y_,
+font_ = fnt_comicsans,color_ = WHITE,centered_ = True):
+    if centered_ == True: #Centraliza o texto
+        x_ -= font_.size(txt_)[0]/2
+        y_ -= font_.size(txt_)[1]/2
+
+    text_surface = font_.render(txt_, False, color_)
+    window.blit(text_surface,(x_,y_))
+
 #CRIANDO OS BLOCOS
 blocos = []
 blocos.append(obj_bloco(spr_bloco,256,window_height - spr_bloco.get_height()))
@@ -190,8 +239,11 @@ blocos.append(obj_bloco(spr_bloco,256 + 64,window_height - 128 - spr_bloco.get_h
 blocos.append(obj_bloco(spr_bloco,256 + 64*2,window_height - 128 - spr_bloco.get_height()))
 blocos.append(obj_bloco(spr_bloco,window_width - 256 + 50,window_height - 256 - spr_bloco.get_height()))
 
+#CRIANDO ADEMAIS
+efeitos = []
+
 #CRIANDO OS JOAGDORES
-jogador1 = obj_jogador(0,0)
+jogador1 = obj_jogador(spr_homi,0,0)
 dash = False
 
 while RODANDO: #game loop
@@ -202,6 +254,7 @@ while RODANDO: #game loop
 
     window.fill((25, 25, 25)) #fundo da tela fica cinza escuro
 
+    draw_text("ROUND 1",window_width/2,64,color_ = (255,0,0))
 
     #---CODIGO DO JOGADOR
     jogador1.step()
@@ -215,8 +268,10 @@ while RODANDO: #game loop
         if key[k]:
             if k == 0 and jogador1.hspeed > -jogador1.lower_max_hspeed:
                 jogador1.hspeed -= jogador1.hacel
+                jogador1.last_direction_moved = -1
             if k == 1 and jogador1.hspeed < jogador1.lower_max_hspeed:
                 jogador1.hspeed += jogador1.hacel
+                jogador1.last_direction_moved = +1
 
             if jogador1.on_ground == True:
                 if k == 2: jogador1.vspeed -= jogador1.jump
@@ -224,9 +279,25 @@ while RODANDO: #game loop
             if k == 3: jogador1.y += 0
 
     if dash == True:
-        jogador1.hspeed += 1.75*fs.sign(jogador1.hspeed)
+        jogador1.hspeed += 1.75*jogador1.last_direction_moved
+
+        dir_ = 180*(jogador1.hspeed > 0)
+
+        efeitos.append(effect(spr_homi[0],jogador1.x,jogador1.y,
+        8,speed_ = 10,direction_ = dir_))
+
+        efeitos.append(effect(spr_homi[0],jogador1.x + 10*fs.sign(jogador1.hspeed),jogador1.y,
+        8,speed_ = 9,direction_ = dir_))
+
+        efeitos.append(effect(spr_homi[0],jogador1.x + 20*fs.sign(jogador1.hspeed),jogador1.y,
+        8,speed_ = 8,direction_ = dir_))
+
         dash = False
 
+    #---CODIGOS ALEATORIOS
+    for f in efeitos:
+        f.step()
+        f.draw()
 
     #---CODIGO DOS BLOCOS
     for b in blocos:
