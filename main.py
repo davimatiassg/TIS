@@ -271,7 +271,7 @@ efeitos = []
 efeitos_deposito = []
 
 #CRIANDO OS JOAGDORES
-animationController
+
 jogador1 = obj_jogador('wherewolf',0,0)
 jogador2 = obj_jogador('homi',100,0)
 dash = False
@@ -335,13 +335,13 @@ while RODANDO: #game loop
 
         dir_ = 180*(jogador1.hspeed > 0)
 
-        create_effect(spr_homi[0],jogador1.x,jogador1.y,
+        create_effect(jogador1.anim.getCurrentFrame(),jogador1.x,jogador1.y,
         8,speed_ = 10,direction_ = dir_)
 
-        create_effect(spr_homi[0],jogador1.x + 10*fs.sign(jogador1.hspeed),jogador1.y,
+        create_effect(jogador1.anim.getCurrentFrame(),jogador1.x + 10*fs.sign(jogador1.hspeed),jogador1.y,
         8,speed_ = 9,direction_ = dir_)
 
-        create_effect(spr_homi[0],jogador1.x + 20*fs.sign(jogador1.hspeed),jogador1.y,
+        create_effect(jogador1.anim.getCurrentFrame(),jogador1.x + 20*fs.sign(jogador1.hspeed),jogador1.y,
         8,speed_ = 8,direction_ = dir_)
 
         dash = False
@@ -351,13 +351,13 @@ while RODANDO: #game loop
 
         dir_ = 180*(jogador2.hspeed > 0)
 
-        create_effect(spr_homi[0],jogador2.x,jogador2.y,
+        create_effect(jogador2.anim.getCurrentFrame(),jogador2.x,jogador2.y,
         8,speed_ = 10,direction_ = dir_)
 
-        create_effect(spr_homi[0],jogador2.x + 10*fs.sign(jogador2.hspeed),jogador2.y,
+        create_effect(jogador2.anim.getCurrentFrame(),jogador2.x + 10*fs.sign(jogador2.hspeed),jogador2.y,
         8,speed_ = 9,direction_ = dir_)
 
-        create_effect(spr_homi[0],jogador2.x + 20*fs.sign(jogador2.hspeed),jogador2.y,
+        create_effect(jogador2.anim.getCurrentFrame(),jogador2.x + 20*fs.sign(jogador2.hspeed),jogador2.y,
         8,speed_ = 8,direction_ = dir_)
 
         dash2 = False
