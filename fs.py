@@ -5,7 +5,7 @@ def sign(value_): #RETORNA O SINAL DO VALOR PASSADO
         return value_/abs(value_)
     return 0 #0 se n for nem positivo nem negativo
 
-def point_distance(x1,y1,x2,y2): #RETORNA A DISTANCIA ENTRE DOIS PONTOS
+def pointDistance(x1,y1,x2,y2): #RETORNA A DISTANCIA ENTRE DOIS PONTOS
     return ((x1 - x2)**2 + (y1 - y2)**2)**(1/2)
 
 def friction(speed_,friction_): #RETORNA A VELOCIDADE DPS DE APLICADA UMA FRICÇÃO
@@ -14,7 +14,7 @@ def friction(speed_,friction_): #RETORNA A VELOCIDADE DPS DE APLICADA UMA FRICÇ
     else:
         return 0
 
-def collision_list(collidee_list,tuple_xy):
+def collisionList(collidee_list,tuple_xy):
 
     #RETORNA UMA LISTA COM [TA COLIDINDO OU NÃO?, QUEM EU TO COLIDINDO]
 
@@ -26,7 +26,8 @@ def collision_list(collidee_list,tuple_xy):
     return [False,-1]
 
 #Loops values
-def loop_value(value_,min_,max_,_speed):
+def loopValue(value_,min_,max_,_speed):
+    #print('current {}; framerate {}; nxt{}'.format(value_,_speed, value_+_speed) )
     if value_ + _speed <= max_:
         return value_ + _speed
     else:
