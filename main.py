@@ -3,6 +3,7 @@ import pygame as pg
 import ctypes
 import fs
 import math
+import animation as an
 
 #SETUP DA TELA (só mexa no width e height)
 window_width = 1280
@@ -28,19 +29,25 @@ WHITE = (255,255,255)
 BLACK = (0  ,0  ,0  )
 
 #IMPORTANTO SPRITES E ETC GRÁFICOS
-spr_homi = [
-pg.image.load('Graphics\spr_homi1.png').convert_alpha(),
-pg.image.load('Graphics\spr_homi2.png').convert_alpha(),
-pg.image.load('Graphics\spr_homi3.png').convert_alpha()]
+
+#spr_homi = [
+#pg.image.load('Graphics\spr_homi1.png').convert_alpha(),
+#pg.image.load('Graphics\spr_homi2.png').convert_alpha(),
+#pg.image.load('Graphics\spr_homi3.png').convert_alpha()]
 
 spr_bloco = pg.image.load('Graphics\sbloco.png').convert_alpha()
 
 #OBJETOS / CLASSES / FUNÇÕES
 class obj_jogador(object):
-    def __init__(self,spr,x,y):
+    def __init__(self, char, x,y):
         #Caracteristicas do obj definidas na criação
-        self.sprite = spr
-        self.hit_box = pg.Rect(x,y,spr[0].get_height(),spr[0].get_width())
+        self.char = char
+        
+        moves = ['idle']
+        self.anim = an.Animator(moves, char, 'char_')
+        self.current_spr = self.anim.play('idle')
+        print(self.current_spr)
+        self.hit_box = pg.Rect(x,y,self.current_spr.get_height(), self.current_spr.get_width())
         self.x = x
         self.y = y
 
@@ -87,11 +94,11 @@ class obj_jogador(object):
         #Passa por cada ponto (menos os da borda) da parte mais esquerda ou direita do retângulo
         collided_horizontally = False
         for h_ in range(self.hit_box.height):
-            var_colisao = fs.collision_list(blocos, (side_ + self.hspeed*dt,self.hit_box.y + h_))
+            var_colisao = fs.collisionList(blocos, (side_ + self.hspeed*dt,self.hit_box.y + h_))
 
             if var_colisao[0] == True:
 
-                collidee = var_colisao[1] #Colidido da collision_list || "collidee" é o colidido
+                collidee = var_colisao[1] #Colidido da collisionList || "collidee" é o colidido
 
                 #Aproximando ele do pixel mais próximo sem colidir
                 i_ = 0
@@ -123,10 +130,10 @@ class obj_jogador(object):
         #Passa por cada ponto (menos os da borda) da parte mais em baixo ou em cima do retângulo
         collided_vertically = False
         for w_ in range(self.hit_box.width - 1):
-            var_colisao = fs.collision_list(blocos,(self.hit_box.x + w_ + 1,side_ + self.vspeed*dt))
+            var_colisao = fs.collisionList(blocos,(self.hit_box.x + w_ + 1,side_ + self.vspeed*dt))
 
             if var_colisao[0] == True:
-                collidee = var_colisao[1] #Colidido da collision_list || "collidee" é o colidido
+                collidee = var_colisao[1] #Colidido da collisionList || "collidee" é o colidido
 
                 #Aproximando ele do pixel mais próximo sem colidir
                 i_ = 0
@@ -174,13 +181,14 @@ class obj_jogador(object):
     def draw(self): #função que desenha o jogador na tela
 
         #Animation loop
+        self.current_spr = self.anim.current
         if abs(self.hspeed) > 0:
-            self.load_sprite_index = fs.loop_value(self.load_sprite_index,0,len(self.sprite) - VERYSMALL,10/FPS)
-            self.sprite_index = int(self.load_sprite_index)
+            self.current_spr = self.anim.play('idle')
         else:
-            self.sprite_index = 0
+            self.current_spr = self.anim.play('idle')
 
-        window.blit(self.sprite[self.sprite_index], (self.x, self.y))
+
+        window.blit(self.current_spr, (self.x, self.y))
 
 class obj_bloco(object):
     def __init__(self,spr,x,y):
@@ -263,8 +271,9 @@ efeitos = []
 efeitos_deposito = []
 
 #CRIANDO OS JOAGDORES
-jogador1 = obj_jogador(spr_homi,0,0)
-jogador2 = obj_jogador(spr_homi,100,0)
+animationController
+jogador1 = obj_jogador('wherewolf',0,0)
+jogador2 = obj_jogador('homi',100,0)
 dash = False
 dash2 = False
 
