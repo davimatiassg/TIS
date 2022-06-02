@@ -86,6 +86,7 @@ class obj_jogador(object):
         #Passa por cada ponto (menos os da borda) da parte mais esquerda ou direita do retângulo
         collided_horizontally = False
         for h_ in range(self.hit_box.height):
+            var_colisao = fs.collisionList(blocos, (side_ + self.hspeed*dt,self.hit_box.y + h_))
 
             if var_colisao[0] == True:
 
@@ -121,6 +122,7 @@ class obj_jogador(object):
         #Passa por cada ponto (menos os da borda) da parte mais em baixo ou em cima do retângulo
         collided_vertically = False
         for w_ in range(self.hit_box.width - 1):
+            var_colisao = fs.collisionList(blocos,(self.hit_box.x + w_ + 1,side_ + self.vspeed*dt))
 
             if var_colisao[0] == True:
                 collidee = var_colisao[1] #Colidido da collision_list || "collidee" é o colidido
@@ -172,6 +174,7 @@ class obj_jogador(object):
 
         #Animation loop
         if abs(self.hspeed) > 0:
+            self.load_sprite_index = fs.loopValue(self.load_sprite_index,0,len(self.sprite) - VERYSMALL,10/FPS)
             self.sprite_index = int(self.load_sprite_index)
         else:
             self.sprite_index = 0
