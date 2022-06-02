@@ -25,6 +25,7 @@ def collisionList(collidee_list,tuple_xy):
 
     return [False,-1]
 
+<<<<<<< HEAD
 def loopValue(value_,min_,max_,_speed):
     if value_ + _speed <= max_:
         return value_ + _speed
