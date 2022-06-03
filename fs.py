@@ -5,6 +5,11 @@ def sign(value_): #RETORNA O SINAL DO VALOR PASSADO
         return value_/abs(value_)
     return 0 #0 se n for nem positivo nem negativo
 
+def clamp(value_,min_,max_):
+    if value_ > max_: return max_
+    if value_ < min_: return min_
+    return value_
+
 def pointDistance(x1,y1,x2,y2): #RETORNA A DISTANCIA ENTRE DOIS PONTOS
     return ((x1 - x2)**2 + (y1 - y2)**2)**(1/2)
 
@@ -29,7 +34,10 @@ def collisionList(collidee_list,tuple_xy):
 def loopValue(value_,min_,max_,_speed):
     #print('current {}; framerate {}; nxt{}'.format(value_,_speed, value_+_speed) )
     if value_ + _speed <= max_:
-        return value_ + _speed
+        if value_ + _speed >= min_:
+            return value_ + _speed
+        else:
+            return max_
     else:
         return min_
 
