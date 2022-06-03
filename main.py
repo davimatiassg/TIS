@@ -38,6 +38,11 @@ GREEN = (0  ,255  ,0  )
 #pg.image.load('Graphics\spr_homi2.png').convert_alpha(),
 #pg.image.load('Graphics\spr_homi3.png').convert_alpha()]
 
+spr_hit = [
+pg.image.load('Graphics\effects\spr_hit_1.png').convert_alpha(),
+pg.image.load('Graphics\effects\spr_hit_2.png').convert_alpha(),
+pg.image.load('Graphics\effects\spr_hit_3.png').convert_alpha()]
+
 spr_bloco = pg.image.load('Graphics\sbloco.png').convert_alpha()
 
 #OBJETOS / CLASSES / FUNÇÕES
@@ -240,6 +245,8 @@ class effect(object):
         self.direction = direction_
 
         #Caracteristicas gerais do obj
+        self.s_index = 0
+
     def step(self):
         if self.alive_time > 0:
             self.alive_time -= 1
@@ -252,7 +259,11 @@ class effect(object):
             efeitos_deposito.append(self)
 
     def draw(self):
-        window.blit(self.sprite, (self.x, self.y))
+        if type([1]) is type(self.sprite):
+            self.s_index =  fs.loopValue(self.s_index,0,len(self.sprite) - VERYSMALL,1/5)
+            window.blit(self.sprite[int(self.s_index)], (self.x, self.y))
+        else:
+            window.blit(self.sprite, (self.x, self.y))
 
 def draw_text(txt_,x_,y_,font_ = fnt_comicsans,color_ = WHITE,centered_ = True):
     if centered_ == True: #Centraliza o texto
@@ -406,6 +417,7 @@ while RODANDO: #game loop
                 jogador2.hspeed += 1.25*fs.sign(jogador2.x - jogador1.x)
                 jogador2.vspeed += 1.25*fs.sign(jogador2.y - jogador1.y)
                 jogador2.Hp -= jogador1.Atk
+                create_effect(spr_hit,jogador2.x,jogador2.y,10)
         attack = False
 
     if attack2 == True:
@@ -415,6 +427,7 @@ while RODANDO: #game loop
                 jogador1.hspeed += 1.25*fs.sign(jogador1.x - jogador2.x)
                 jogador1.vspeed += 1.25*fs.sign(jogador1.y - jogador2.y)
                 jogador1.Hp -= jogador2.Atk
+                create_effect(spr_hit,jogador1.x,jogador1.y,10)
         attack2 = False
 
     #---CODIGOS ALEATORIOS
