@@ -47,7 +47,7 @@ class obj_jogador(object):
         self.char = char
         self.player_ = player_
 
-        moves = ['idle']
+        moves = ['idle', 'run']
         self.anim = an.Animator(moves, char, 'char_')
         self.current_spr = self.anim.play('idle')
         print(self.current_spr)
@@ -192,7 +192,7 @@ class obj_jogador(object):
             #Animation loop
             self.current_spr = self.anim.current
             if abs(self.hspeed) > 0:
-                self.current_spr = self.anim.play('idle')
+                self.current_spr = self.anim.play('run')
             else:
                 self.current_spr = self.anim.play('idle')
 
