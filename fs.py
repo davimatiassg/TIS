@@ -32,3 +32,12 @@ def loopValue(value_,min_,max_,_speed):
         return value_ + _speed
     else:
         return min_
+
+#Loops values
+def getAllRects():
+    r = []
+    for i in globals():
+        if type(i) is type(Rect(0, 0, 0, 0)):
+            r.append(i)
+
+    return r

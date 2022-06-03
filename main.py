@@ -69,12 +69,12 @@ class obj_jogador(object):
         self.speed = 0 #velocidade total
         self.direction = 0 #direção (vetores)
         self.max_hspeed = 5 #velocidade horizontal máxima (em módulo)
-        self.lower_max_hspeed = 0.8 #"walk speed" máxima (em módulo)
+        self.lower_max_hspeed = 0.9 #"walk speed" máxima (em módulo)
         self.max_vspeed = 5 #velocidade vertical máxima (em módulo)
-        self.hacel = 0.12 #aceleração horizontal
-        self.jump = 2 #aceleração vertical, ou seja, pulo
-        self.fric = 0.09 #fricção
-        self.grav = 0.1 #gravidade
+        self.hacel = 0.14 #aceleração horizontal
+        self.jump = 1.6 #aceleração vertical, ou seja, pulo
+        self.fric = 0.1 #fricção
+        self.grav = 0.075 #gravidade
         self.on_ground = False #boolean: está no chão?
         self.sprite_index = 0 #index atual do sprite
         self.load_sprite_index = 0 #variavel que serve para loopar o sprite_index
