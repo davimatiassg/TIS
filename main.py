@@ -61,7 +61,8 @@ class obj_jogador(object):
         self.sc = 2
 
         moves = ['idle', 'run', 'jump', 'tkdmg']
-        self.anim = an.Animator(moves, char, 'char_')
+        frameRates = [8, 12, 16, 16]
+        self.anim = an.Animator(moves, frameRates, char, 'char_')
         self.current_spr = self.anim.play('idle')
         
         self.hit_box = pg.Rect(x,y,self.current_spr.get_height()*self.sc, self.current_spr.get_width()*self.sc)
@@ -72,7 +73,7 @@ class obj_jogador(object):
         self.Hp = 50 #Vida
         self.maxHp = self.Hp
         self.Atk = 4 #Dano
-        self.AtkRange = 0 #Range do Atk
+        self.AtkRange = 10 #Range do Atk
         self.hspeed = 0 #velocidade horizontal
         self.vspeed = 0 #velocidade vertical
         self.speed = 0 #velocidade total
@@ -118,9 +119,9 @@ class obj_jogador(object):
                         self.hspeed += 1.75*self.last_direction_moved
                         self.dash_cooldown = 40
                     if i == 1:
-                        pj.getpList(playerList)
-                        atk_args = (self.player_, self.x + self.last_direction_moved*self.AtkRange,
-                            self.y, 200, self.Atk, self.knockback)
+                        
+                        atk_args = (self.player_, self.hspeed + self.x + self.hit_box.width*0.2 + self.last_direction_moved*(self.hit_box.width + self.AtkRange),
+                            self.y + self.hit_box.height/5, (90 -(90*self.last_direction_moved)), 0.1, self.Atk, self.knockback)
                         c = chd.charAtk(self.char, atk_args)
                         efeitos.append(c)
             
@@ -438,7 +439,7 @@ def create_projection(anim, x, y, player_owner, on_hit_efx, while_alive_efx, _al
         efeitos.append(efeito_reciclado)
     else:
         #cria um efeito novo
-        efeitos.append(pj.projection(anim, x, y, player_owner, on_hit_efx, while_alive_efx, _alive_time))
+        efeitos.append(pj.Projection(anim, x, y, player_owner, on_hit_efx, while_alive_efx, _alive_time))
         
 def spawn_cards():
     cartas.append(carta(room_width/2 - 700 + camera.x,200 + camera.y,0))
@@ -492,8 +493,9 @@ while RODANDO: #game loop
     draw_text("ROUND 1",rel_width/2 + room_width/2,rel_height/2 + 64,color_ = (255,0,0))
 
     #---CODIGO DO JOGADOR
-    jogador1.getPlayerInput(key, act)         #Função para realizar o controle do jogador 1 com base nas inputs do teclado
+
     jogador1.step()                                     #Função de cógido geral "step" do jogador1
+    jogador1.getPlayerInput(key, act)         #Função para realizar o controle do jogador 1 com base nas inputs do teclado
     jogador1.draw()                                     #Função de desenhar do jogador1
     jogador2.getPlayerInput(key2, act2)       #Função para realizar o controle do jogador 2 com base nas inputs do teclado
     jogador2.step()                                     #Função de cógido geral "step" do jogador2
@@ -546,9 +548,16 @@ while RODANDO: #game loop
 
     #---CODIGOS ALEATORIOS
     for f in efeitos:
-        f.step() #Função de cógido geral "step" do efeito
-        if(type(f) == pj.projection):
-            window.blit(f.anim.getCurrentFrame(), (f.hitbox.x, f.hitbox.y))
+        f.step(playerList) #Função de cógido geral "step" do efeito
+        if(str(type(f)) == "<class 'projection.Projection'>"):
+            
+            if(f.t > 0):
+                tup = list(f.draw())
+                window.blit(tup[0], (tup[1]+camera.x, tup[2] + camera.y))
+            else:
+                efeitos.remove(f)
+                f.vanish()
+                efeitos_deposito.append(f)
         else:
             f.draw() #Função de desenhar do efeito
 

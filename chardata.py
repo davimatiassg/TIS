@@ -10,11 +10,11 @@ char_atk = {
 	'homi':'homiatk'
 }
 
-def claws(player, x, y, atime, dmg, knk):
-	anim = an.Animator(['claws'], 'claws', 'fx_')
+def claws(player, x, y, di, atime, dmg, knk):
+	anim = an.Animator(['claws'], [20], 'claws', 'fx_')
 	fx = {
 	'damage': [dmg, knk]
 	}
-	return( pj.projection(anim, x, y, player, fx, [], atime))
+	return pj.Projection(anim, x, y, di, player, fx, [], atime, False)
 def homiatk():
 	pass

@@ -5,7 +5,7 @@ import os
 
 
 class Animator:
-    def __init__(self, anims, owner, a_type):
+    def __init__(self, anims, frates, owner, a_type):
         self.owner = owner ## nome do objeto que é animado
         self.names = anims ## nomes de cada uma das animações
         self.current = self.names[0] ## animação tocando atualmente
@@ -13,13 +13,13 @@ class Animator:
         self.local = 'Graphics/'+a_type+self.owner
         for i in self.names: ## para cada uma das animações, adiciona uma animação nova
             a_name = self.owner + '_' + i
-            self.animations.append(Animation(a_name, 8, self.local, a_type, i + '_'))
+            self.animations.append(Animation(a_name, frates[self.names.index(i)], self.local, a_type, i + '_'))
 
-    def addAnimation(self, anim): # adicionar uma nova animação, caso necessário
+    def addAnimation(self, anim, frate): # adicionar uma nova animação, caso necessário
         if anim in self.names:
-            self.names[self.name.indes(anim)] = Animation(self.owner + '_' + anim, 16, self.local, a_type, anim + '_')
+            self.names[self.name.indes(anim)] = Animation(self.owner + '_' + anim, frate, self.local, a_type, anim + '_')
         else:
-            self.animations.append(Animation(self.owner + '_' + anim, 8, self.local, a_type, anim + '_'))
+            self.animations.append(Animation(self.owner + '_' + anim, frate, self.local, a_type, anim + '_'))
 
     def getCurrentFrame(self): ## retorna o sprite rodando atualmente
         return self.animations[self.names.index(self.current)].playActualFrame()
@@ -34,6 +34,12 @@ class Animator:
             self.current = a
             return self.animations[self.names.index(a)].playFrame(i)
 
+    def clearAnim(self):
+        self.names = ['blank']
+        self.current = self.names[0]
+        self.animations = [blankAnim()]
+        self.local = ''
+        return self
 
 class Animation: ## classe que armazena animações
 
@@ -65,3 +71,21 @@ class Animation: ## classe que armazena animações
     def playActualFrame(self): #retorna o frame atual da animação
         if(self.valid):
             return self.frames[int(self.idx)]
+
+class blankAnim(Animation):
+    def __init__(self, *args):
+        self.name = 'blank'
+        img = pg.Surface((0, 0))
+        self.frames = [img]
+        self.valid = True
+        self.idx = 0
+        self.fps = 0
+
+    def play(self):
+        return self.frames[0]
+
+    def playFrame(self, i):
+        return play(self)
+
+    def playActualFrame(self):
+        return play(self)
