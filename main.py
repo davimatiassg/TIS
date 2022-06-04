@@ -120,8 +120,8 @@ class obj_jogador(object):
                         self.dash_cooldown = 40
                     if i == 1:
                         
-                        atk_args = (self.player_, self.hspeed + self.x + self.hit_box.width*0.2 + self.last_direction_moved*(self.hit_box.width + self.AtkRange),
-                            self.y + self.hit_box.height/5, (90 -(90*self.last_direction_moved)), 0.1, self.Atk, self.knockback)
+                        atk_args = (self, self.hspeed + self.x + self.hit_box.width*0.2 + self.last_direction_moved*(self.hit_box.width + self.AtkRange),
+                            self.y + self.hit_box.height/5, (90 -(90*self.last_direction_moved)), 0.15, self.Atk, self.knockback)
                         c = chd.charAtk(self.char, atk_args)
                         efeitos.append(c)
             

@@ -19,7 +19,8 @@ class Projection(object): #define uma classe projeção
 
 
 	def draw(self): #função que desenha o obj na tela
-		a = pg.transform.rotate(self.anim.play(self.anim.current), self.dir), self.hitbox.x, self.hitbox.y
+		spr = self.anim.play(self.anim.current)
+		a = pg.transform.scale(pg.transform.rotate(spr, self.dir), (spr.get_width()*1.5, spr.get_height()*1.5)), self.hitbox.x, self.hitbox.y - self.hitbox.height/6
 		return a
 
 	def vanish(self): ## função para desaparecer/desativar
@@ -34,11 +35,11 @@ class Projection(object): #define uma classe projeção
 
 	## ## OS EFEITOS A SEGUIR SÃO DEPENDENTES DE CARTAS E TIPO DE ATAQUE ## ##
 
-	def move(self, _dir,  _speed): ## função para mover em uma direção
-			self.dir = _dir 						## direção do movimento, em graus de inclinação em relação à direita
-			self.s = _speed						## velocidade do movimento
-			self.hitbox.x += self.s*math.cos(dir*(2*math.pi/360)) ## atualiza posição no eixo x
-			self.hitbox.y += self.s*math.sin(dir*(2*math.pi/360)) ## atualiza posição no eixo y
+	def move(self, _speed): ## função para mover em uma direção
+		## direção do movimento, em graus de inclinação em relação à direita
+		## velocidade do movimento
+		self.hitbox.x += _speed[0] ## atualiza posição no eixo x
+		self.hitbox.y += _speed[1] ## atualiza posição no eixo y
 
 	def damage(self, dmg, knockback, tg):
 		k = []
@@ -49,11 +50,13 @@ class Projection(object): #define uma classe projeção
 	def step(self, plist):
 		if(self.t > 0):											## enquanto estiver ativo
 			self.t -= 1											## diminua o tempo ativo
-			self.anim.play('claws')
-			for i in self.passive: 								## para cada string i com o nome de um método que roda passivamente dentro do dicionário
-				locals()[i](tuple(self.passive.get(i)))				## procure localmente e execute o método de nome i com os argumentos associados a ele no dicionário
+			self.anim.play(self.anim.animations[0].name)
+			for i in self.passive:
+				fullargs = self.passive.get(i)
+				hitfx = getattr(Projection, i)						## para cada string i com o nome de um método que roda passivamente dentro do dicionário
+				hitfx(self, *tuple(fullargs))				## procure localmente e execute o método de nome i com os argumentos associados a ele no dicionário
 			for i in plist:
-				if self.hitbox.colliderect(i.hit_box) and i.player_ != self.owner:
+				if self.hitbox.colliderect(i.hit_box) and i.player_ != self.owner.player_:
 					for j in self.on_hit:
 						fullargs = self.on_hit.get(j)
 						fullargs.append(i)
