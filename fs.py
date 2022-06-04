@@ -1,5 +1,7 @@
 #FUNÇÕES
 
+import pygame as pg
+
 def sign(value_): #RETORNA O SINAL DO VALOR PASSADO
     if value_ != 0:
         return value_/abs(value_)
@@ -45,7 +47,7 @@ def loopValue(value_,min_,max_,_speed):
 def getAllRects():
     r = []
     for i in globals():
-        if type(i) is type(Rect(0, 0, 0, 0)):
+        if type(i) is type(pg.Rect(0, 0, 0, 0)):
             r.append(i)
 
     return r

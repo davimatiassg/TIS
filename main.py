@@ -5,6 +5,8 @@ import fs
 import math
 import animation as an
 import random
+import chardata as chd
+import projection as pj
 
 #SETUP DA TELA (só mexa no width e height)
 pg.init()
@@ -23,8 +25,10 @@ room_height = 900 #720
 rel_width = window_width - room_width
 rel_height = window_height - room_height
 RODANDO = True
-key = [False,False,False,False] #lista ulitlizada na movimentação do jogador1
-key2 = [False,False,False,False] #lista ulitlizada na movimentação do jogador2
+key = [False,False,False,False]       #lista ulitlizada na movimentação do jogador1
+act = [False, False]                         #lista ulitlizada nos ataques do jogador1
+key2 = [False,False,False,False]     #lista ulitlizada na movimentação do jogador2
+act2 = [False, False]                       #lista ulitlizada nos ataques do jogador2
 FPS = 64 #ITS 64 BECAUSE YES (dont change)
 VERYSMALL = 0.001
 VERBIG = 10**5
@@ -56,10 +60,10 @@ class obj_jogador(object):
         self.player_ = player_
         self.sc = 2
 
-        moves = ['idle', 'run']
+        moves = ['idle', 'run', 'jump', 'tkdmg']
         self.anim = an.Animator(moves, char, 'char_')
         self.current_spr = self.anim.play('idle')
-        print(self.current_spr)
+        
         self.hit_box = pg.Rect(x,y,self.current_spr.get_height()*self.sc, self.current_spr.get_width()*self.sc)
         self.x = x
         self.y = y
@@ -68,7 +72,7 @@ class obj_jogador(object):
         self.Hp = 50 #Vida
         self.maxHp = self.Hp
         self.Atk = 4 #Dano
-        self.AtkRange = 150 #Range do Atk
+        self.AtkRange = 0 #Range do Atk
         self.hspeed = 0 #velocidade horizontal
         self.vspeed = 0 #velocidade vertical
         self.speed = 0 #velocidade total
@@ -81,12 +85,62 @@ class obj_jogador(object):
         self.fric = 0.1 #fricção
         self.grav = 0.075 #gravidade
         self.on_ground = False #boolean: está no chão?
+        self.unabletime = 0 #tempo de atordoamento/imobilização restante
+        self.invtime = 0 #tempo de invulnerabilidade restante
         self.sprite_index = 0 #index atual do sprite
         self.load_sprite_index = 0 #variavel que serve para loopar o sprite_index
         self.last_direction_moved = 1 #Variavel que guarda a última direção que o jogador quiz se mover
-        self.dash_cooldown = 0
+        self.dash_cooldown = 0          #Armazena o tempo restante até poder usar o próximo dash
+        self.atk_cooldown = 0          #Armazena o tempo restante até poder usar o próximo ataque
+        self.knockback = 1.25 #knockback aplicado ao inimigo
+        self.knockresi = 1 #resistência ao knockback: 1 = nenhuma resitência; 2 = 50% resistência; 3 = 66% de resistência e assim por diante.
+        
+    def getPlayerInput(self, klist, alist):
+        if self.unabletime <= 0:
+            for j in range(len(klist)): #movimentando o personagem com base no input
+            #k = 0 é A
+            #k = 1 é D
+            #k = 2 é W
+            #k = 3 é S
+                if klist[j]:
+                    if j == 0 and self.hspeed > -self.lower_max_hspeed:
+                        self.hspeed -= self.hacel
+                        self.last_direction_moved = -1
+                    if j == 1 and self.hspeed < self.lower_max_hspeed:
+                        self.hspeed += self.hacel
+                        self.last_direction_moved = +1
+                    if self.on_ground == True:
+                        if j == 2: self.vspeed -= self.jump
+                        if j == 3: pass #futuro código para agachar
+            for i in range(len(alist)):
+                if alist[i]:
+                    if i == 0 and self.dash_cooldown <= 0:
+                        self.hspeed += 1.75*self.last_direction_moved
+                        self.dash_cooldown = 40
+                    if i == 1:
+                        pj.getpList(playerList)
+                        atk_args = (self.player_, self.x + self.last_direction_moved*self.AtkRange,
+                            self.y, 200, self.Atk, self.knockback)
+                        c = chd.charAtk(self.char, atk_args)
+                        efeitos.append(c)
+            
+                        
+    def takeDamage(self, d, knk):
+        if self.invtime <= 0:
+            self.hspeed += knk[0]
+            self.vspeed += knk[1]
+            self.Hp -= d
+            self.unabletime = int(((knk[0]**2 + knk[1]**2)**(1/2)) *10/self.knockresi)
+            self.invtime = self.unabletime * 5/3
+        
 
     def step(self): #função que executa o cógido geral do jogador
+        if self.invtime > 0:
+            self.invtime -= 1
+        if self.unabletime > 0:
+            self.unabletime -= 1
+        if self.dash_cooldown > 0:
+            self.dash_cooldown -= 1
         if self.Hp > 0:
             #Verificando se ele está no chão (da tela)
             if self.y >= room_height - self.hit_box.height:
@@ -196,20 +250,28 @@ class obj_jogador(object):
             self.direction = 360*(1/(2*math.pi))*(self.speed)
 
             #dash cooldown
-            self.dash_cooldown = fs.loopValue(self.dash_cooldown,0,100,-1)
+            
 
     def draw(self): #função que desenha o jogador na tela
         if self.Hp > 0:
             #Animation loop
             self.current_spr = self.anim.current
-            if abs(self.hspeed) > 0:
-                self.current_spr = self.anim.play('run')
+            
+            if self.unabletime > 0:
+                self.current_spr = self.anim.play('tkdmg')
             else:
-                self.current_spr = self.anim.play('idle')
-
+                if self.on_ground:
+                    if abs(self.hspeed) > 0:
+                        self.current_spr = self.anim.play('run')
+                    else:
+                        self.current_spr = self.anim.play('idle')
+                else:
+                    self.current_spr = self.anim.play('jump')
+                
             sprite_2x = pg.transform.scale(self.current_spr,
             (int(self.current_spr.get_width()*self.sc),int(self.current_spr.get_height()*self.sc)))
             #Vira o sprite de acordo com a direção dele
+            
             sprite_virado = pg.transform.flip(sprite_2x,self.last_direction_moved < 0,False)
 
             window.blit(sprite_virado, (self.x + camera.x, self.y + camera.y))
@@ -359,11 +421,33 @@ def create_effect(sprite_,x_,y_,alive_time_,speed_ = 0,direction_ = 0):
         #cria um efeito novo
         efeitos.append(effect(sprite_,x_,y_,alive_time_,speed_ = speed_,direction_ = direction_))
 
+
+def create_projection(anim, x, y, player_owner, on_hit_efx, while_alive_efx, _alive_time):
+    if len(efeitos_deposito) > 0:
+        #Se ja tem um efeito salvo na memoria re-utltilize ele
+        efeito_reciclado = efeitos_deposito[0]
+        efeito_reciclado.anim = anim
+        efeito_reciclado.hitbox = pg.Rect(x,y,self.anim.playFrame(anim.names[0], 0).get_height(), self.anim.playFrame(anim.names[0], 0).get_width())
+        efeito_reciclado.t = _alive_time * 64		## tempo de atividade, em frames (a 64 fps)
+        efeito_reciclado.owner = player_owner     		## player que criou (não interage com ele)
+        efeito_reciclado.on_hit = on_hit_efx 		## dicionário com o nome e atributos dos métodos que serão executados quando acertar um alvo qualquer
+        efeito_reciclado.passive = while_alive_efx
+        efeito_reciclado.targets = plist	
+
+        efeitos_deposito.pop(0)
+        efeitos.append(efeito_reciclado)
+    else:
+        #cria um efeito novo
+        efeitos.append(pj.projection(anim, x, y, player_owner, on_hit_efx, while_alive_efx, _alive_time))
+        
 def spawn_cards():
     cartas.append(carta(room_width/2 - 700 + camera.x,200 + camera.y,0))
     cartas.append(carta(room_width/2 + 700 - 320 + camera.x,200 + camera.y,2))
     cartas.append(carta(room_width/2 - 160 + camera.x,200 + camera.y,1))
 
+def listPlayers():
+    return playerList
+        
 #CRIANDO OS BLOCOS
 blocos = []
 blocos.append(obj_bloco(spr_bloco,0,room_height - spr_bloco.get_height()))
@@ -383,13 +467,14 @@ camera = obj_camera()
 efeitos = []
 efeitos_deposito = []
 cartas = []
-spawn_cards()
+#spawn_cards()
 card_selected = 0
 
 #CRIANDO OS JOAGDORES
 
 jogador1 = obj_jogador('wherewolf',0,0,0)
 jogador2 = obj_jogador('homi',100,0,1)
+playerList = [jogador1, jogador2]
 dash = False;attack = False
 dash2 = False;attack2 = False
 
@@ -407,53 +492,16 @@ while RODANDO: #game loop
     draw_text("ROUND 1",rel_width/2 + room_width/2,rel_height/2 + 64,color_ = (255,0,0))
 
     #---CODIGO DO JOGADOR
-    jogador1.step() #Função de cógido geral "step" do jogador1
-    jogador1.draw() #Função de desenhar do jogador1
+    jogador1.getPlayerInput(key, act)         #Função para realizar o controle do jogador 1 com base nas inputs do teclado
+    jogador1.step()                                     #Função de cógido geral "step" do jogador1
+    jogador1.draw()                                     #Função de desenhar do jogador1
+    jogador2.getPlayerInput(key2, act2)       #Função para realizar o controle do jogador 2 com base nas inputs do teclado
+    jogador2.step()                                     #Função de cógido geral "step" do jogador2
+    jogador2.draw()                                     #Função de desenhar do jogador2
 
-    jogador2.step() #Função de cógido geral "step" do jogador2
-    jogador2.draw() #Função de desenhar do jogador2
-
-    for k in range(len(key)): #movimentando o personagem com base no input
-        #k = 0 é A
-        #k = 1 é D
-        #k = 2 é W
-        #k = 3 é S
-        if key[k]:
-            if k == 0 and jogador1.hspeed > -jogador1.lower_max_hspeed:
-                jogador1.hspeed -= jogador1.hacel
-                jogador1.last_direction_moved = -1
-            if k == 1 and jogador1.hspeed < jogador1.lower_max_hspeed:
-                jogador1.hspeed += jogador1.hacel
-                jogador1.last_direction_moved = +1
-
-            if jogador1.on_ground == True:
-                if k == 2: jogador1.vspeed -= jogador1.jump
-
-            if k == 3: jogador1.y += 0
-
-    for k in range(len(key2)): #movimentando o personagem com base no input
-        #k = 0 é A
-        #k = 1 é D
-        #k = 2 é W
-        #k = 3 é S
-        if key2[k]:
-            if k == 0 and jogador2.hspeed > -jogador2.lower_max_hspeed:
-                jogador2.hspeed -= jogador2.hacel
-                jogador2.last_direction_moved = -1
-            if k == 1 and jogador2.hspeed < jogador2.lower_max_hspeed:
-                jogador2.hspeed += jogador2.hacel
-                jogador2.last_direction_moved = +1
-
-            if jogador2.on_ground == True:
-                if k == 2: jogador2.vspeed -= jogador2.jump
-
-            if k == 3:
-                jogador2.y += 0
-
-    if dash == True:
+    
+    if act[0] == True:
         #Joga o player horizontalmente pra ultima direção que ele se moveu
-        jogador1.hspeed += 1.75*jogador1.last_direction_moved
-
         dir_ = 180*(jogador1.hspeed > 0)
 
         #Dexa um trail pra trás
@@ -467,13 +515,10 @@ while RODANDO: #game loop
         8,speed_ = 8,direction_ = dir_)
 
         #Só vai poder usar o dash dnv dps de um tempinho :(
-        jogador1.dash_cooldown = 40
-        dash = False
+        act[0] = False
 
-    if dash2 == True:
+    if act2[0] == True:
         #Joga o player horizontalmente pra ultima direção que ele se moveu
-        jogador2.hspeed += 1.75*jogador2.last_direction_moved
-
         dir_ = 180*(jogador2.hspeed > 0)
 
         #Dexa um trail pra trás
@@ -485,30 +530,14 @@ while RODANDO: #game loop
 
         create_effect(jogador2.anim.getCurrentFrame(),jogador2.x + 20*fs.sign(jogador2.hspeed),jogador2.y,
         8,speed_ = 8,direction_ = dir_)
-
         #Só vai poder usar o dash dnv dps de um tempinho :(
-        jogador2.dash_cooldown = 40
-        dash2 = False
+        act2[0] = False
 
-    if attack == True:
-        #Se o player 1 está em range
-        if fs.pointDistance(jogador1.x,jogador1.y,jogador2.x,jogador2.y) < jogador1.AtkRange:
-            if abs(jogador2.hspeed) <= jogador2.lower_max_hspeed: #Se o player 2 n está no dash
-                jogador2.hspeed += 1.25*fs.sign(jogador2.x - jogador1.x)
-                jogador2.vspeed += 1.25*fs.sign(jogador2.y - jogador1.y)
-                jogador2.Hp -= jogador1.Atk
-                create_effect(spr_hit,jogador2.x,jogador2.y,10)
-        attack = False
+    if act[1] == True:
+        act[1] = False
 
-    if attack2 == True:
-        #Se o player 1 está em range
-        if fs.pointDistance(jogador2.x,jogador2.y,jogador1.x,jogador1.y) < jogador2.AtkRange:
-            if abs(jogador1.hspeed) <= jogador1.lower_max_hspeed: #Se o player 1 n está no dash
-                jogador1.hspeed += 1.25*fs.sign(jogador1.x - jogador2.x)
-                jogador1.vspeed += 1.25*fs.sign(jogador1.y - jogador2.y)
-                jogador1.Hp -= jogador2.Atk
-                create_effect(spr_hit,jogador1.x,jogador1.y,10)
-        attack2 = False
+    if act2[1] == True:
+        act2[1] = False
 
     #---CODIGO DOS BLOCOS
     for b in blocos:
@@ -518,7 +547,10 @@ while RODANDO: #game loop
     #---CODIGOS ALEATORIOS
     for f in efeitos:
         f.step() #Função de cógido geral "step" do efeito
-        f.draw() #Função de desenhar do efeito
+        if(type(f) == pj.projection):
+            window.blit(f.anim.getCurrentFrame(), (f.hitbox.x, f.hitbox.y))
+        else:
+            f.draw() #Função de desenhar do efeito
 
     camera.draw() #Função de desenhar da camera
 
@@ -546,15 +578,16 @@ while RODANDO: #game loop
                     card_selected = fs.loopValue(card_selected,0,2,+1)
                 else:
                     key[1] = True
+            
             if eventos.key == pg.K_w:
                 key[2] = True
             if eventos.key == pg.K_s:
                 key[3] = True
             if eventos.key == pg.K_r:
-                if jogador1.dash_cooldown <= 0:
-                    dash = True
+                act[0] = True
             if eventos.key == pg.K_t:
                 attack = True
+                act[1] = True
 
             if eventos.key == pg.K_LEFT:
                 key2[0] = True
@@ -565,14 +598,14 @@ while RODANDO: #game loop
             if eventos.key == pg.K_DOWN:
                 key2[3] = True
             if eventos.key == pg.K_KP1:
-                if jogador2.dash_cooldown <= 0:
-                    dash2 = True
+                act2[0] = True
             if eventos.key == pg.K_KP2:
                 attack2 = True
+                act2[1] = True
 
             if eventos.key == pg.K_ESCAPE:
                 RODANDO = False
-
+        
         #SOLTOU A TECLA
         if eventos.type == pg.KEYUP:
 
@@ -597,6 +630,5 @@ while RODANDO: #game loop
         #FECHOU A JANELA
         if eventos.type == pg.QUIT:
             RODANDO = False
-
 #FIM
 print("jogo finalizado")
