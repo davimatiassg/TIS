@@ -507,14 +507,14 @@ while RODANDO: #game loop
         dir_ = 180*(jogador1.hspeed > 0)
 
         #Dexa um trail pra trás
-        create_effect(jogador1.anim.getCurrentFrame(),jogador1.x,jogador1.y,
-        8,speed_ = 10,direction_ = dir_)
+        #create_effect(jogador1.anim.getCurrentFrame(),jogador1.x,jogador1.y,
+        #8,speed_ = 10,direction_ = dir_)
 
-        create_effect(jogador1.anim.getCurrentFrame(),jogador1.x + 10*fs.sign(jogador1.hspeed),jogador1.y,
-        8,speed_ = 9,direction_ = dir_)
+        #create_effect(jogador1.anim.getCurrentFrame(),jogador1.x + 10*fs.sign(jogador1.hspeed),jogador1.y,
+        #8,speed_ = 9,direction_ = dir_)
 
-        create_effect(jogador1.anim.getCurrentFrame(),jogador1.x + 20*fs.sign(jogador1.hspeed),jogador1.y,
-        8,speed_ = 8,direction_ = dir_)
+        #create_effect(jogador1.anim.getCurrentFrame(),jogador1.x + 20*fs.sign(jogador1.hspeed),jogador1.y,
+        #8,speed_ = 8,direction_ = dir_)
 
         #Só vai poder usar o dash dnv dps de um tempinho :(
         act[0] = False
@@ -524,14 +524,14 @@ while RODANDO: #game loop
         dir_ = 180*(jogador2.hspeed > 0)
 
         #Dexa um trail pra trás
-        create_effect(jogador2.anim.getCurrentFrame(),jogador2.x,jogador2.y,
-        8,speed_ = 10,direction_ = dir_)
+        #create_effect(jogador2.anim.getCurrentFrame(),jogador2.x,jogador2.y,
+        #8,speed_ = 10,direction_ = dir_)
 
-        create_effect(jogador2.anim.getCurrentFrame(),jogador2.x + 10*fs.sign(jogador2.hspeed),jogador2.y,
-        8,speed_ = 9,direction_ = dir_)
+        #create_effect(jogador2.anim.getCurrentFrame(),jogador2.x + 10*fs.sign(jogador2.hspeed),jogador2.y,
+        #8,speed_ = 9,direction_ = dir_)
 
-        create_effect(jogador2.anim.getCurrentFrame(),jogador2.x + 20*fs.sign(jogador2.hspeed),jogador2.y,
-        8,speed_ = 8,direction_ = dir_)
+        #create_effect(jogador2.anim.getCurrentFrame(),jogador2.x + 20*fs.sign(jogador2.hspeed),jogador2.y,
+        #8,speed_ = 8,direction_ = dir_)
         #Só vai poder usar o dash dnv dps de um tempinho :(
         act2[0] = False
 
@@ -548,9 +548,9 @@ while RODANDO: #game loop
 
     #---CODIGOS ALEATORIOS
     for f in efeitos:
-        f.step(playerList) #Função de cógido geral "step" do efeito
+        #Função de cógido geral "step" do efeito
         if(str(type(f)) == "<class 'projection.Projection'>"):
-            
+            f.step(playerList)
             if(f.t > 0):
                 tup = list(f.draw())
                 window.blit(tup[0], (tup[1]+camera.x, tup[2] + camera.y))
@@ -606,9 +606,9 @@ while RODANDO: #game loop
                 key2[2] = True
             if eventos.key == pg.K_DOWN:
                 key2[3] = True
-            if eventos.key == pg.K_KP1:
-                act2[0] = True
             if eventos.key == pg.K_KP2:
+                act2[0] = True
+            if eventos.key == pg.K_KP3:
                 attack2 = True
                 act2[1] = True
 
