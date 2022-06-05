@@ -15,7 +15,7 @@ window_height = ctypes.windll.user32.GetSystemMetrics(1)
 window = pg.display.set_mode((window_width,window_height),pg.FULLSCREEN)
 
 pg.font.init()
-fnt_comicsans = [
+fnt_comicsans = [ # FONT SIZES
 pg.font.SysFont('Comic Sans MS', 25),
 pg.font.SysFont('Comic Sans MS', 30),
 pg.font.SysFont('Comic Sans MS', 35),
@@ -23,7 +23,6 @@ pg.font.SysFont('Comic Sans MS', 30),
 pg.font.SysFont('Comic Sans MS', 45)
 ]
 fnt_comicsans_Vspace = [30,40,50,60,70]
-
 
 #VARIAVEIS GLOBAIS
 room_width = 1600 #1280
@@ -42,8 +41,9 @@ RED = (255  ,0  ,0  )
 GREEN = (0  ,255  ,0  )
 BLUE = (0  ,0  ,255  )
 txt_de_22c = "abcdefghijklmnopqrstuv"
+VOLUME_DO_JOGO = 1 # 0 a 1
 
-#IMPORTANTO SPRITES E ETC GRÁFICOS
+#IMPORTANTO SPRITES, SONS e ETC
 
 #spr_homi = [
 #pg.image.load('Graphics\spr_homi1.png').convert_alpha(),
@@ -56,6 +56,8 @@ pg.image.load('Graphics\effects\spr_hit_2.png').convert_alpha(),
 pg.image.load('Graphics\effects\spr_hit_3.png').convert_alpha()]
 
 spr_bloco = pg.image.load('Graphics\sbloco.png').convert_alpha()
+
+snd_sound = pg.mixer.Sound("z4.wav")
 
 #OBJETOS / CLASSES / FUNÇÕES
 class obj_jogador(object):
@@ -428,6 +430,15 @@ def create_effect(sprite_,x_,y_,alive_time_,speed_ = 0,direction_ = 0):
     else:
         #cria um efeito novo
         efeitos.append(effect(sprite_,x_,y_,alive_time_,speed_ = speed_,direction_ = direction_))
+
+def play_sound(snd_,loops_ = 0,volume_ = VOLUME_DO_JOGO,fade_out_ = 0):
+    snd_.play(loops = loops_)
+    snd_.set_volume(VOLUME_DO_JOGO)
+    if fade_out_ > 0:
+        snd_.fadeout(fade_out_)
+
+def stop_sound(snd_):
+    snd_.stop()
 
 def spawn_cards():
     cartas.append(carta(room_width/2 - 700 + camera.x,200 + camera.y,spr_bloco,0))
