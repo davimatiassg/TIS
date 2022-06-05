@@ -17,7 +17,14 @@ window_height = ctypes.windll.user32.GetSystemMetrics(1)
 window = pg.display.set_mode((window_width,window_height),pg.FULLSCREEN)
 
 pg.font.init()
-fnt_comicsans = pg.font.SysFont('Comic Sans MS', 45)
+fnt_comicsans = [ # FONT SIZES
+pg.font.SysFont('Comic Sans MS', 25),
+pg.font.SysFont('Comic Sans MS', 30),
+pg.font.SysFont('Comic Sans MS', 35),
+pg.font.SysFont('Comic Sans MS', 30),
+pg.font.SysFont('Comic Sans MS', 45)
+]
+fnt_comicsans_Vspace = [30,40,50,60,70]
 
 #VARIAVEIS GLOBAIS
 room_width = 1600 #1280
@@ -37,8 +44,10 @@ BLACK = (0  ,0  ,0  )
 RED = (255  ,0  ,0  )
 GREEN = (0  ,255  ,0  )
 BLUE = (0  ,0  ,255  )
+txt_de_22c = "abcdefghijklmnopqrstuv"
+VOLUME_DO_JOGO = 1 # 0 a 1
 
-#IMPORTANTO SPRITES E ETC GRÁFICOS
+#IMPORTANTO SPRITES, SONS e ETC
 
 #spr_homi = [
 #pg.image.load('Graphics\spr_homi1.png').convert_alpha(),
@@ -51,6 +60,8 @@ pg.image.load('Graphics\effects\spr_hit_2.png').convert_alpha(),
 pg.image.load('Graphics\effects\spr_hit_3.png').convert_alpha()]
 
 spr_bloco = pg.image.load('Graphics\sbloco.png').convert_alpha()
+
+snd_sound = pg.mixer.Sound("z4.wav")
 
 #OBJETOS / CLASSES / FUNÇÕES
 class obj_jogador(object):
@@ -91,7 +102,8 @@ class obj_jogador(object):
         self.sprite_index = 0 #index atual do sprite
         self.load_sprite_index = 0 #variavel que serve para loopar o sprite_index
         self.last_direction_moved = 1 #Variavel que guarda a última direção que o jogador quiz se mover
-        self.dash_cooldown = 0          #Armazena o tempo restante até poder usar o próximo dash
+        self.dash_cooldown = 0 #variavel que da um tempo pro dash ser usando dnv
+        self.dash_time = 40 #de qnt em qnt tempo o dash pode ser usado
         self.atk_cooldown = 0          #Armazena o tempo restante até poder usar o próximo ataque
         self.knockback = 1.25 #knockback aplicado ao inimigo
         self.knockresi = 1 #resistência ao knockback: 1 = nenhuma resitência; 2 = 50% resistência; 3 = 66% de resistência e assim por diante.
@@ -134,7 +146,6 @@ class obj_jogador(object):
             self.unabletime = int(((knk[0]**2 + knk[1]**2)**(1/2)) *10/self.knockresi)
             self.invtime = self.unabletime * 5/3
         
-
     def step(self): #função que executa o cógido geral do jogador
         if self.invtime > 0:
             self.invtime -= 1
@@ -251,8 +262,8 @@ class obj_jogador(object):
             self.direction = 360*(1/(2*math.pi))*(self.speed)
 
             #dash cooldown
-            
 
+            self.dash_cooldown -= 1
     def draw(self): #função que desenha o jogador na tela
         if self.Hp > 0:
             #Animation loop
@@ -261,6 +272,7 @@ class obj_jogador(object):
             if self.unabletime > 0:
                 self.current_spr = self.anim.play('tkdmg')
             else:
+
                 if self.on_ground:
                     if abs(self.hspeed) > 0:
                         self.current_spr = self.anim.play('run')
@@ -268,9 +280,10 @@ class obj_jogador(object):
                         self.current_spr = self.anim.play('idle')
                 else:
                     self.current_spr = self.anim.play('jump')
-                
+
             sprite_2x = pg.transform.scale(self.current_spr,
             (int(self.current_spr.get_width()*self.sc),int(self.current_spr.get_height()*self.sc)))
+
             #Vira o sprite de acordo com a direção dele
             
             sprite_virado = pg.transform.flip(sprite_2x,self.last_direction_moved < 0,False)
@@ -344,22 +357,51 @@ class obj_camera(object):
         self.screen_shake_intensity = intensity_
 
 class carta(object):
-    def __init__(self,x,y,id_):
+    def __init__(self,x,y,tipo_,id_):
         #Caracteristicas do obj definidas na criação
         self.x = x
         self.y = y
         self.id_ = id_
         self.width = 320
         self.height = 460
-        self.sprite = pg.Rect(self.x,self.y,self.width,self.height)
+        self.card_sprite = pg.Rect(self.x,self.y,self.width,self.height)
+        self.sprite = tipo_
+        self.txt = "Essa é uma carta legal que faz coisas legais."
 
         #Caracteristicas gerais do obj
-        self.selected = False
+        self.sc = 1.2 #\in [1,2)
 
+        #Ajeitando o texto
+        for i in range(len(self.txt)):
+            if (i + 1) % 23 == 0: # ~22 caracteres por linha
+                self.txt = self.txt[:i] + "\n" + self.txt[i:]
 
     def draw(self): #função que desenha o obj na tela
-        if card_selected == self.id_:
-            pg.draw.rect(window , WHITE ,self.sprite)
+
+        #Desenhando o fundo da carta
+        self.card_sprite.width = self.width*(1 + (self.sc - 1)*(card_selected == self.id_))
+        self.card_sprite.height = self.height*(1 + (self.sc - 1)*(card_selected == self.id_))
+        self.card_sprite.x = self.x - self.width*(self.sc - 1)*(card_selected == self.id_)/2
+        self.card_sprite.y = self.y - self.height*(self.sc - 1)*(card_selected == self.id_)/2
+        pg.draw.rect(window , WHITE ,self.card_sprite)
+
+        #Desenhando a imagem da carta
+        if self.sprite != None:
+
+            #Modifica as dimensões do sprite
+            sprite_sc = pg.transform.scale(self.sprite,
+            (int(self.sprite.get_width()*self.card_sprite.width/self.width),
+            int(self.sprite.get_height()*self.card_sprite.height/self.height)))
+
+            window.blit(sprite_sc, (self.card_sprite.x + self.card_sprite.width/2 - sprite_sc.get_width()/2,
+            self.card_sprite.y + self.card_sprite.height/3.2 - sprite_sc.get_height()/2))
+
+        #Desenhando a descrição da carta
+        fnt_sc = int((self.card_sprite.width/self.width) + (2 - self.sc)) - 1
+
+        draw_text(self.txt,self.card_sprite.x + self.card_sprite.width/2,
+        self.card_sprite.y + self.card_sprite.height/2 + 70,
+        color_ = BLACK,font_ = fnt_comicsans[fnt_sc])
 
 class effect(object):
     def __init__(self,spr,x,y,alive_time,
@@ -393,13 +435,42 @@ class effect(object):
         else:
             window.blit(self.sprite, (self.x + camera.x, self.y + camera.y))
 
-def draw_text(txt_,x_,y_,font_ = fnt_comicsans,color_ = WHITE,centered_ = True):
-    if centered_ == True: #Centraliza o texto
-        x_ -= font_.size(txt_)[0]/2
-        y_ -= font_.size(txt_)[1]/2
+def draw_text(txt_,x_,y_,font_ = fnt_comicsans[4],color_ = WHITE,centered_ = True):
+    if "\n" in txt_:
 
-    text_surface = font_.render(txt_, False, color_)
-    window.blit(text_surface,(x_,y_))
+        #IT HAS LINE BREAKS; (╯°□°)╯︵ ┻━┻
+
+        if centered_ == True: #Centraliza o texto
+            x_ -= font_.size(txt_de_22c)[0]/2
+            y_ -= font_.size(txt_de_22c)[1]/2
+
+        #Escrevendo cada linha
+        i_ = 0 #n line
+        str_ = "" #current string with no line breaks
+
+        for i in range(len(txt_)):
+            if txt_[i] == "\n" or i == len(txt_) - 1:
+                if i == len(txt_) - 1: str_ += txt_[i]
+
+                #Each time there is a line break in string -> draw all the string before the line break
+                text_surface = font_.render(str_, False, color_)
+                window.blit(text_surface,(x_,y_ + fnt_comicsans_Vspace[fnt_comicsans.index(font_)]*i_))
+
+                i_ += 1 #adding n'th line
+                str_ = "" #Resets the "current string with no line breaks"
+            else:
+                str_ += txt_[i] #Adding to the "current string with no line breaks"
+
+    else:
+
+        #NO LINE BREAKS; LIFE IS GOOD
+
+        if centered_ == True: #Centraliza o texto
+            x_ -= font_.size(txt_)[0]/2
+            y_ -= font_.size(txt_)[1]/2
+
+        text_surface = font_.render(txt_, False, color_)
+        window.blit(text_surface,(x_,y_))
 
 def draw_rectangle(x1,y1,x2,y2,color_ = WHITE):
     pg.draw.rect(window,color_,(x1,y1,(x2 - x1),(y2 - y1)))
@@ -423,6 +494,7 @@ def create_effect(sprite_,x_,y_,alive_time_,speed_ = 0,direction_ = 0):
         efeitos.append(effect(sprite_,x_,y_,alive_time_,speed_ = speed_,direction_ = direction_))
 
 
+
 def create_projection(anim, x, y, player_owner, on_hit_efx, while_alive_efx, _alive_time):
     if len(efeitos_deposito) > 0:
         #Se ja tem um efeito salvo na memoria re-utltilize ele
@@ -441,10 +513,20 @@ def create_projection(anim, x, y, player_owner, on_hit_efx, while_alive_efx, _al
         #cria um efeito novo
         efeitos.append(pj.Projection(anim, x, y, player_owner, on_hit_efx, while_alive_efx, _alive_time))
         
+
+def play_sound(snd_,loops_ = 0,volume_ = VOLUME_DO_JOGO,fade_out_ = 0):
+    snd_.play(loops = loops_)
+    snd_.set_volume(VOLUME_DO_JOGO)
+    if fade_out_ > 0:
+        snd_.fadeout(fade_out_)
+
+def stop_sound(snd_):
+    snd_.stop()
+
 def spawn_cards():
-    cartas.append(carta(room_width/2 - 700 + camera.x,200 + camera.y,0))
-    cartas.append(carta(room_width/2 + 700 - 320 + camera.x,200 + camera.y,2))
-    cartas.append(carta(room_width/2 - 160 + camera.x,200 + camera.y,1))
+    cartas.append(carta(room_width/2 - 700 + camera.x,200 + camera.y,spr_bloco,0))
+    cartas.append(carta(room_width/2 + 700 - 320 + camera.x,200 + camera.y,None,2))
+    cartas.append(carta(room_width/2 - 160 + camera.x,200 + camera.y,None,1))
 
 def listPlayers():
     return playerList
@@ -468,8 +550,9 @@ camera = obj_camera()
 efeitos = []
 efeitos_deposito = []
 cartas = []
-#spawn_cards()
+#spawn_cards() #COMENTE E DESCOMENTE PARA SPAWNAR AS CARTAS
 card_selected = 0
+vez = 0
 
 #CRIANDO OS JOAGDORES
 
@@ -485,12 +568,13 @@ while RODANDO: #game loop
 
     dt = clock.tick(FPS) #SETS THE FPS
 
-    pg.display.set_caption("{}".format(clock.get_fps())) #mostra o fps no título da tela
+    #pg.display.set_caption("{}".format(clock.get_fps())) #mostra o fps no título da tela
     #print(clock.get_fps())
 
     window.fill((25, 25, 25)) #fundo da tela fica cinza escuro
 
     draw_text("ROUND 1",rel_width/2 + room_width/2,rel_height/2 + 64,color_ = (255,0,0))
+    draw_text(str(clock.get_fps()),rel_width/2 + room_width/2,rel_height/2 + 128,color_ = (255,0,0))
 
     #---CODIGO DO JOGADOR
 
@@ -517,7 +601,11 @@ while RODANDO: #game loop
         #8,speed_ = 8,direction_ = dir_)
 
         #Só vai poder usar o dash dnv dps de um tempinho :(
+
         act[0] = False
+        jogador1.dash_cooldown = jogador1.dash_time
+        dash = False
+
 
     if act2[0] == True:
         #Joga o player horizontalmente pra ultima direção que ele se moveu
@@ -533,6 +621,7 @@ while RODANDO: #game loop
         #create_effect(jogador2.anim.getCurrentFrame(),jogador2.x + 20*fs.sign(jogador2.hspeed),jogador2.y,
         #8,speed_ = 8,direction_ = dir_)
         #Só vai poder usar o dash dnv dps de um tempinho :(
+
         act2[0] = False
 
     if act[1] == True:
@@ -540,6 +629,11 @@ while RODANDO: #game loop
 
     if act2[1] == True:
         act2[1] = False
+
+        jogador2.dash_cooldown = jogador2.dash_time
+        dash2 = False
+
+
 
     #---CODIGO DOS BLOCOS
     for b in blocos:
@@ -564,7 +658,7 @@ while RODANDO: #game loop
     camera.draw() #Função de desenhar da camera
 
     for carta_ in cartas:
-        carta_.draw()
+        carta_.draw() #Função de desenhar a carta
 
 
     #FIM DOS DESENHOS NA TELA
@@ -578,12 +672,12 @@ while RODANDO: #game loop
         if eventos.type == pg.KEYDOWN:
 
             if eventos.key == pg.K_a:
-                if len(cartas) > 0:
+                if len(cartas) > 0 and vez == 0:
                     card_selected = fs.loopValue(card_selected,0,2,-1)
                 else:
                     key[0] = True
             if eventos.key == pg.K_d:
-                if len(cartas) > 0:
+                if len(cartas) > 0 and vez == 0:
                     card_selected = fs.loopValue(card_selected,0,2,+1)
                 else:
                     key[1] = True
@@ -599,9 +693,15 @@ while RODANDO: #game loop
                 act[1] = True
 
             if eventos.key == pg.K_LEFT:
-                key2[0] = True
+                if len(cartas) > 0 and vez == 1:
+                    card_selected = fs.loopValue(card_selected,0,2,-1)
+                else:
+                    key2[0] = True
             if eventos.key == pg.K_RIGHT:
-                key2[1] = True
+                if len(cartas) > 0 and vez == 1:
+                    card_selected = fs.loopValue(card_selected,0,2,+1)
+                else:
+                    key2[1] = True
             if eventos.key == pg.K_UP:
                 key2[2] = True
             if eventos.key == pg.K_DOWN:
