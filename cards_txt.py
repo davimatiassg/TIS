@@ -1,10 +1,23 @@
+#FIREBALL
 FIREBALL_ATK_RANGE = 240
 FIREBALL_ATIME = 1.2*60
 FIREBALL_KNOCKBACK = 1.8
 FIREBALL_ATK = 15
 FIREBALL_SPEED = 15
 
+#ENHANCED_SPEED
+ENHANCED_SPEED_PERCENT = 1.15
+
+#BLEEDING
+BLEEDING_TIME = 3*60 #in frames
+BLEEDING_RATE = 0.6*60 #in frames
+BLEEDING_DAMAGE = 1
+
+
+#DESCRIPTIONS
 CARDS_DESCRIPTIONS = {
     None: "Carta Legal.",
-    'FIREBALL': "oloco uma bola de fogo"
+    'FIREBALL': "oloco uma bola de fogo",
+    'ENHANCED_SPEED': "Você fica {0}% mais    veloz".format(round(100*(ENHANCED_SPEED_PERCENT - 1))),
+    'BLEEDING': "Aplica sangramento de {} segundos".format(round(BLEEDING_TIME/60))
 }

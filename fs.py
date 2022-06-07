@@ -7,6 +7,9 @@ def sign(value_): #RETORNA O SINAL DO VALOR PASSADO
         return value_/abs(value_)
     return 0 #0 se n for nem positivo nem negativo
 
+def divs(value_1,value_2):
+    return int(int(value_1)/int(value_2)) == int(value_1)/int(value_2)
+
 def clamp(value_,min_,max_):
     if value_ > max_: return max_
     if value_ < min_: return min_

@@ -15,17 +15,20 @@ char_atk = {
 def claws(player, x, y, di, atime, dmg, knk):
 	anim = an.Animator(['claws'], [32], 'claws', 'fx_')
 	hfx = {
-	'damage': [dmg, knk]
+	'damage': [dmg, knk],
+	'bleeding': [player.APPLIES_BLEEDING]
 	}
 	pfx = {
 	'move':[[player.hspeed, player.vspeed]]
 	}
+
 	return pj.Projection(anim, x, y, di, player, hfx, pfx, atime, False)
 
 def homiatk(player, x, y, di, atime, dmg, knk):
 	anim = an.Animator(['homiatk'], [15], 'homiatk', 'fx_')
 	hfx = {
-	'damage': [dmg, knk]
+	'damage': [dmg, knk],
+	'bleeding': [player.APPLIES_BLEEDING]
 	}
 	pfx = {
 	'move':[[player.hspeed, player.vspeed]]

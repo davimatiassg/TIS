@@ -8,6 +8,7 @@ import random
 import chardata as chd
 import projection as pj
 import cards_txt as ctxt
+import time
 
 #SETUP DA TELA (só mexa no width e height)
 pg.init()
@@ -47,6 +48,15 @@ GREEN = (0  ,255  ,0  )
 BLUE = (0  ,0  ,255  )
 txt_de_22c = "abcdefghijklmnopqrstuv"
 VOLUME_DO_JOGO = 1 # 0 a 1
+
+LISTA_DE_CARTAS = []
+USED_CARDS = []
+
+for i in ctxt.CARDS_DESCRIPTIONS:
+    if i != None:
+        LISTA_DE_CARTAS.append(i)
+
+print(LISTA_DE_CARTAS)
 
 #IMPORTANTO SPRITES, SONS e ETC
 
@@ -111,7 +121,8 @@ class obj_jogador(object):
         self.enemy = self #Plottwistico
 
         #CARDs stuff
-        self.HAS_FIRE_BALL = True
+        self.HAS_FIRE_BALL = False
+        self.APPLIES_BLEEDING = False;self.TIME_BLEEDING = 0
 
     def getPlayerInput(self, klist, alist):
         if self.unabletime <= 0:
@@ -140,6 +151,8 @@ class obj_jogador(object):
                         if self.HAS_FIRE_BALL:
                             if fs.pointDistance(self.x,self.y,self.enemy.x,self.enemy.y) > ctxt.FIREBALL_ATK_RANGE:
                                 self.CARDfireball()
+                            else:
+                                self.DefaultAtk()
                         else:
                             self.DefaultAtk()
 
@@ -279,8 +292,13 @@ class obj_jogador(object):
             self.direction = 360*(1/(2*math.pi))*(self.speed)
 
             #dash cooldown
-
             self.dash_cooldown -= 1
+
+            #bleeding
+            if self.TIME_BLEEDING > 0:
+                if fs.divs(self.TIME_BLEEDING,ctxt.BLEEDING_RATE) == True:
+                    self.takeDamage(ctxt.BLEEDING_DAMAGE,[0,0])
+                self.TIME_BLEEDING -= 1
 
     def draw(self): #função que desenha o jogador na tela
         if self.Hp > 0:
@@ -384,6 +402,7 @@ class carta(object):
         self.height = 460
         self.card_sprite = pg.Rect(self.x,self.y,self.width,self.height)
         self.sprite = spr_bloco
+        self.tipo_ = tipo_
         self.txt = ctxt.CARDS_DESCRIPTIONS.get(tipo_)
 
         #Caracteristicas gerais do obj
@@ -531,13 +550,79 @@ def play_sound(snd_,loops_ = 0,volume_ = VOLUME_DO_JOGO,fade_out_ = 0):
 def stop_sound(snd_):
     snd_.stop()
 
-def spawn_cards():
-    cartas.append(carta(room_width/2 - 700 + camera.x,200 + camera.y,"FIREBALL",0))
-    cartas.append(carta(room_width/2 + 700 - 320 + camera.x,200 + camera.y,None,2))
-    cartas.append(carta(room_width/2 - 160 + camera.x,200 + camera.y,None,1))
-
 def listPlayers():
     return playerList
+
+def spawn_cards():
+
+    USED_CARDS.clear()
+
+    def choose_card_type():
+        #ESCOLHE UMA CARTA ALEATORIA
+
+        choosen_card = None
+
+        while True:
+            choosen_card = LISTA_DE_CARTAS[random.randint(0,len(LISTA_DE_CARTAS) - 1)]
+            if (choosen_card in USED_CARDS) == False:
+                USED_CARDS.append(choosen_card)
+                return choosen_card
+
+    if len(cartas_deposito) == 0:
+        cartas.append(carta(room_width/2 - 700 + camera.x,200 + camera.y,choose_card_type(),0))
+        cartas.append(carta(room_width/2 - 160 + camera.x,200 + camera.y,choose_card_type(),1))
+        cartas.append(carta(room_width/2 + 700 - 320 + camera.x,200 + camera.y,choose_card_type(),2))
+    else:
+        #Reciclando as cartas
+        for c in range(len(cartas_deposito)):
+            if c == 0:
+                cartas_deposito[c].__init__(room_width/2 - 700 + camera.x,200 + camera.y,choose_card_type(),0)
+            if c == 1:
+                cartas_deposito[c].__init__(room_width/2 - 160 + camera.x,200 + camera.y,choose_card_type(),1)
+            if c == 2:
+                cartas_deposito[c].__init__(room_width/2 + 700 - 320 + camera.x,200 + camera.y,choose_card_type(),2)
+
+            cartas.append(cartas_deposito[c])
+
+        cartas_deposito.clear()
+
+def apply_card_effect(player_,card_):
+    if card_.tipo_ == "FIREBALL":
+        player_.HAS_FIRE_BALL = True
+    if card_.tipo_ == "ENHANCED_SPEED":
+        player_.lower_max_hspeed *= ctxt.ENHANCED_SPEED_PERCENT
+        player_.max_hspeed *= ctxt.ENHANCED_SPEED_PERCENT
+        player_.hacel *= ctxt.ENHANCED_SPEED_PERCENT
+    if card_.tipo_ == "BLEEDING":
+        player_.APPLIES_BLEEDING = True
+
+    return 0
+
+def escolhendo_cartas(player_):
+    global card_selected
+
+    #Aplicando o efeito das Cartas
+    apply_card_effect(player_,cartas[card_selected])
+
+    if len(vez) > 1:
+        #Escolhendo a Carta
+        cartas_deposito.append(card_selected)
+        cartas.pop(card_selected)
+
+        for c in cartas: #Re-indexando as cartas
+            c.id_ = cartas.index(c)
+
+        card_selected = 0 #Choosing new card_selected
+
+        #Passando a vez
+        vez.pop(0)
+
+    else: #Os jogadores ja escolheram as cartas
+
+        #Deletando as cartas
+        for c in cartas:
+            cartas_deposito.append(c)
+        cartas.clear()
 
 #CRIANDO OS BLOCOS
 blocos = []
@@ -558,9 +643,10 @@ camera = obj_camera()
 efeitos = []
 efeitos_deposito = []
 cartas = []
+cartas_deposito = []
 spawn_cards() #COMENTE E DESCOMENTE PARA SPAWNAR AS CARTAS
 card_selected = 0
-vez = 0
+vez = [0,1] #lista que armazena a ordem de escolha de cartas
 
 #CRIANDO OS JOAGDORES
 
@@ -573,17 +659,22 @@ jogador2.enemy = jogador1
 dash = False;attack = False
 dash2 = False;attack2 = False
 
-
+last_time = time.time()
 
 
 while RODANDO: #game loop
 
     dt = clock.tick(FPS) #SETS THE FPS
 
-    #pg.display.set_caption("{}".format(clock.get_fps())) #mostra o fps no título da tela
-    #print(clock.get_fps())
+    #dt_ = time.time() - last_time
+    #last_time = time.time()
 
     window.fill((25, 25, 25)) #fundo da tela fica cinza escuro
+
+    #draw_text(str(int(200*dt_)/200),rel_width/2 + room_width/2,rel_height/2 + 230,color_ = (255,0,0))
+
+    #pg.display.set_caption("{}".format(clock.get_fps())) #mostra o fps no título da tela
+    #print(clock.get_fps())
 
     draw_text("ROUND 1",rel_width/2 + room_width/2,rel_height/2 + 64,color_ = (255,0,0))
     draw_text(str(clock.get_fps()),rel_width/2 + room_width/2,rel_height/2 + 128,color_ = (255,0,0))
@@ -596,6 +687,7 @@ while RODANDO: #game loop
     jogador2.getPlayerInput(key2, act2)       #Função para realizar o controle do jogador 2 com base nas inputs do teclado
     jogador2.step()                                     #Função de cógido geral "step" do jogador2
     jogador2.draw()                                     #Função de desenhar do jogador2
+
 
 
     if act[0] == True:
@@ -636,8 +728,10 @@ while RODANDO: #game loop
 
         act2[0] = False
 
+
     if act[1] == True:
         act[1] = False
+
 
     if act2[1] == True:
         act2[1] = False
@@ -650,7 +744,6 @@ while RODANDO: #game loop
     #---CODIGO DOS BLOCOS
     for b in blocos:
         b.draw() #Função de desenhar do bloco
-
 
     #---CODIGOS ALEATORIOS
     for f in efeitos:
@@ -670,8 +763,8 @@ while RODANDO: #game loop
 
     camera.draw() #Função de desenhar da camera
 
-    for carta_ in cartas:
-        carta_.draw() #Função de desenhar a carta
+    for c in cartas:
+        c.draw() #Função de desenhar a carta
 
 
     #FIM DOS DESENHOS NA TELA
@@ -684,47 +777,67 @@ while RODANDO: #game loop
         #APERTOU A TECLA
         if eventos.type == pg.KEYDOWN:
 
+            #PLAYER1
+
             if eventos.key == pg.K_a:
-                if len(cartas) > 0 and vez == 0:
-                    card_selected = fs.loopValue(card_selected,0,2,-1)
+                if len(cartas) > 0 and vez[0] == 0:
+                    card_selected = fs.loopValue(card_selected,0,len(cartas) - 1,-1)
                 else:
                     key[0] = True
+
             if eventos.key == pg.K_d:
-                if len(cartas) > 0 and vez == 0:
-                    card_selected = fs.loopValue(card_selected,0,2,+1)
+                if len(cartas) > 0 and vez[0] == 0:
+                    card_selected = fs.loopValue(card_selected,0,len(cartas) - 1,+1)
                 else:
                     key[1] = True
 
-            if eventos.key == pg.K_w:
-                key[2] = True
-            if eventos.key == pg.K_s:
-                key[3] = True
+            if eventos.key == pg.K_w: key[2] = True
+            if eventos.key == pg.K_s: key[3] = True
+
+            #DASH KEY / SELECT CARD
             if eventos.key == pg.K_r:
-                act[0] = True
+                if len(cartas) > 0 and vez[0] == 0:
+                    escolhendo_cartas(jogador1)
+                else:
+                    act[0] = True
+
+            #ATTACK KEY
             if eventos.key == pg.K_t:
                 attack = True
                 act[1] = True
 
+            #PLAYER2
+
             if eventos.key == pg.K_LEFT:
-                if len(cartas) > 0 and vez == 1:
-                    card_selected = fs.loopValue(card_selected,0,2,-1)
+                if len(cartas) > 0 and vez[0] == 1:
+                    card_selected = fs.loopValue(card_selected,0,len(cartas) - 1,-1)
                 else:
                     key2[0] = True
+
             if eventos.key == pg.K_RIGHT:
-                if len(cartas) > 0 and vez == 1:
-                    card_selected = fs.loopValue(card_selected,0,2,+1)
+                if len(cartas) > 0 and vez[0] == 1:
+                    card_selected = fs.loopValue(card_selected,0,len(cartas) - 1,+1)
                 else:
                     key2[1] = True
-            if eventos.key == pg.K_UP:
-                key2[2] = True
-            if eventos.key == pg.K_DOWN:
-                key2[3] = True
+
+            if eventos.key == pg.K_UP: key2[2] = True
+            if eventos.key == pg.K_DOWN: key2[3] = True
+
+            #DASH KEY / SELECT CARD
             if eventos.key == pg.K_KP2:
-                act2[0] = True
+                if len(cartas) > 0 and vez[0] == 1:
+                    escolhendo_cartas(jogador2)
+                else:
+                    act2[0] = True
+
+            #ATTACK KEY
             if eventos.key == pg.K_KP3:
                 attack2 = True
                 act2[1] = True
 
+            #GERAL
+
+            #Ending Game
             if eventos.key == pg.K_ESCAPE:
                 RODANDO = False
 
@@ -752,5 +865,6 @@ while RODANDO: #game loop
         #FECHOU A JANELA
         if eventos.type == pg.QUIT:
             RODANDO = False
+
 #FIM
 print("jogo finalizado")

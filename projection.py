@@ -53,6 +53,9 @@ class Projection(object): #define uma classe projeção
 		self.anim.play('explode')
 		self.t = 30
 
+	def bleeding(self, applies_, tg):
+		if applies_ == True: tg.TIME_BLEEDING = ctxt.BLEEDING_TIME
+
 	def block_contact(self,*args):
 		return 0
 
