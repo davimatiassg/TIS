@@ -32,6 +32,17 @@ def collisionList(collidee_list,tuple_xy):
 
     return [False,-1]
 
+def collisionList_hitbox(collidee_list,outro_rect_):
+
+    #RETORNA UMA LISTA COM [TA COLIDINDO OU NÃO?, QUEM EU TO COLIDINDO]
+
+    #Verifica se ta colidindo com cada elemento de collidee_list
+    for collidee_ in collidee_list:
+        if collidee_.hit_box.colliderect(outro_rect_) == True:
+            return [True,collidee_] #Se ta colidindo com pelomenos 1
+
+    return [False,-1]
+
 #Loops values
 def loopValue(value_,min_,max_,_speed):
     #print('current {}; framerate {}; nxt{}'.format(value_,_speed, value_+_speed) )

@@ -1,0 +1,10 @@
+FIREBALL_ATK_RANGE = 240
+FIREBALL_ATIME = 1.2*60
+FIREBALL_KNOCKBACK = 1.8
+FIREBALL_ATK = 15
+FIREBALL_SPEED = 15
+
+CARDS_DESCRIPTIONS = {
+    None: "Carta Legal.",
+    'FIREBALL': "oloco uma bola de fogo"
+}

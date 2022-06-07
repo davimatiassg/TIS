@@ -7,6 +7,7 @@ import animation as an
 import random
 import chardata as chd
 import projection as pj
+import cards_txt as ctxt
 
 #SETUP DA TELA (só mexa no width e height)
 pg.init()
@@ -75,7 +76,7 @@ class obj_jogador(object):
         frameRates = [8, 12, 16, 16]
         self.anim = an.Animator(moves, frameRates, char, 'char_')
         self.current_spr = self.anim.play('idle')
-        
+
         self.hit_box = pg.Rect(x,y,self.current_spr.get_height()*self.sc, self.current_spr.get_width()*self.sc)
         self.x = x
         self.y = y
@@ -107,7 +108,11 @@ class obj_jogador(object):
         self.atk_cooldown = 0          #Armazena o tempo restante até poder usar o próximo ataque
         self.knockback = 1.25 #knockback aplicado ao inimigo
         self.knockresi = 1 #resistência ao knockback: 1 = nenhuma resitência; 2 = 50% resistência; 3 = 66% de resistência e assim por diante.
-        
+        self.enemy = self #Plottwistico
+
+        #CARDs stuff
+        self.HAS_FIRE_BALL = True
+
     def getPlayerInput(self, klist, alist):
         if self.unabletime <= 0:
             for j in range(len(klist)): #movimentando o personagem com base no input
@@ -124,20 +129,20 @@ class obj_jogador(object):
                         self.last_direction_moved = +1
                     if self.on_ground == True:
                         if j == 2: self.vspeed -= self.jump
-                        if j == 3: pass #futuro código para agachar
+                        if j == 3: pass #futuro código para agachar :o
+
             for i in range(len(alist)):
                 if alist[i]:
                     if i == 0 and self.dash_cooldown <= 0:
                         self.hspeed += 1.75*self.last_direction_moved
                         self.dash_cooldown = 40
                     if i == 1:
-                        
-                        atk_args = (self, self.hspeed + self.x + self.hit_box.width*0.2 + self.last_direction_moved*(self.hit_box.width + self.AtkRange),
-                            self.y + self.hit_box.height/5, (90 -(90*self.last_direction_moved)), 0.15, self.Atk, self.knockback)
-                        c = chd.charAtk(self.char, atk_args)
-                        efeitos.append(c)
-            
-                        
+                        if self.HAS_FIRE_BALL:
+                            if fs.pointDistance(self.x,self.y,self.enemy.x,self.enemy.y) > ctxt.FIREBALL_ATK_RANGE:
+                                self.CARDfireball()
+                        else:
+                            self.DefaultAtk()
+
     def takeDamage(self, d, knk):
         if self.invtime <= 0:
             self.hspeed += knk[0]
@@ -145,7 +150,19 @@ class obj_jogador(object):
             self.Hp -= d
             self.unabletime = int(((knk[0]**2 + knk[1]**2)**(1/2)) *10/self.knockresi)
             self.invtime = self.unabletime * 5/3
-        
+
+    def DefaultAtk(self):
+        #Normal Attack
+        atk_args = (self, self.hspeed + self.x + self.hit_box.width*0.2 + self.last_direction_moved*(self.hit_box.width + self.AtkRange),
+            self.y + self.hit_box.height/5, (90 -(90*self.last_direction_moved)), 0.15, self.Atk, self.knockback)
+        efeitos.append(chd.charAtk(self.char, atk_args))
+
+    def CARDfireball(self):
+        #FireBall Attack
+        atk_args = (self, self.hspeed + self.x + self.hit_box.width*0.2 + self.last_direction_moved*(self.hit_box.width + self.AtkRange),
+            self.y + self.hit_box.height/5, (90 -(90*self.last_direction_moved)), ctxt.FIREBALL_ATIME, ctxt.FIREBALL_ATK, ctxt.FIREBALL_KNOCKBACK)
+        efeitos.append(chd.charAtk('fireball', atk_args))
+
     def step(self): #função que executa o cógido geral do jogador
         if self.invtime > 0:
             self.invtime -= 1
@@ -264,11 +281,12 @@ class obj_jogador(object):
             #dash cooldown
 
             self.dash_cooldown -= 1
+
     def draw(self): #função que desenha o jogador na tela
         if self.Hp > 0:
             #Animation loop
             self.current_spr = self.anim.current
-            
+
             if self.unabletime > 0:
                 self.current_spr = self.anim.play('tkdmg')
             else:
@@ -285,7 +303,7 @@ class obj_jogador(object):
             (int(self.current_spr.get_width()*self.sc),int(self.current_spr.get_height()*self.sc)))
 
             #Vira o sprite de acordo com a direção dele
-            
+
             sprite_virado = pg.transform.flip(sprite_2x,self.last_direction_moved < 0,False)
 
             window.blit(sprite_virado, (self.x + camera.x, self.y + camera.y))
@@ -365,8 +383,8 @@ class carta(object):
         self.width = 320
         self.height = 460
         self.card_sprite = pg.Rect(self.x,self.y,self.width,self.height)
-        self.sprite = tipo_
-        self.txt = "Essa é uma carta legal que faz coisas legais."
+        self.sprite = spr_bloco
+        self.txt = ctxt.CARDS_DESCRIPTIONS.get(tipo_)
 
         #Caracteristicas gerais do obj
         self.sc = 1.2 #\in [1,2)
@@ -475,25 +493,16 @@ def draw_text(txt_,x_,y_,font_ = fnt_comicsans[4],color_ = WHITE,centered_ = Tru
 def draw_rectangle(x1,y1,x2,y2,color_ = WHITE):
     pg.draw.rect(window,color_,(x1,y1,(x2 - x1),(y2 - y1)))
 
-def create_effect(sprite_,x_,y_,alive_time_,speed_ = 0,direction_ = 0):
+def create_effect(efeito_1,efeito_2):
     if len(efeitos_deposito) > 0:
         #Se ja tem um efeito salvo na memoria re-utltilize ele
-        efeito_reciclado = efeitos_deposito[0]
+        efeitos_deposito[0].__init__(efeito_2)
 
-        efeito_reciclado.sprite = sprite_
-        efeito_reciclado.x = x_
-        efeito_reciclado.y = y_
-        efeito_reciclado.alive_time = alive_time_
-        efeito_reciclado.speed = speed_
-        efeito_reciclado.direction = direction_
-
+        efeitos.append(efeitos_deposito[0])
         efeitos_deposito.pop(0)
-        efeitos.append(efeito_reciclado)
     else:
         #cria um efeito novo
-        efeitos.append(effect(sprite_,x_,y_,alive_time_,speed_ = speed_,direction_ = direction_))
-
-
+        efeitos.append(chd.charAtk(efeito_1,efeito_2))
 
 def create_projection(anim, x, y, player_owner, on_hit_efx, while_alive_efx, _alive_time):
     if len(efeitos_deposito) > 0:
@@ -505,14 +514,13 @@ def create_projection(anim, x, y, player_owner, on_hit_efx, while_alive_efx, _al
         efeito_reciclado.owner = player_owner     		## player que criou (não interage com ele)
         efeito_reciclado.on_hit = on_hit_efx 		## dicionário com o nome e atributos dos métodos que serão executados quando acertar um alvo qualquer
         efeito_reciclado.passive = while_alive_efx
-        efeito_reciclado.targets = plist	
+        efeito_reciclado.targets = plist
 
         efeitos_deposito.pop(0)
         efeitos.append(efeito_reciclado)
     else:
         #cria um efeito novo
         efeitos.append(pj.Projection(anim, x, y, player_owner, on_hit_efx, while_alive_efx, _alive_time))
-        
 
 def play_sound(snd_,loops_ = 0,volume_ = VOLUME_DO_JOGO,fade_out_ = 0):
     snd_.play(loops = loops_)
@@ -524,13 +532,13 @@ def stop_sound(snd_):
     snd_.stop()
 
 def spawn_cards():
-    cartas.append(carta(room_width/2 - 700 + camera.x,200 + camera.y,spr_bloco,0))
+    cartas.append(carta(room_width/2 - 700 + camera.x,200 + camera.y,"FIREBALL",0))
     cartas.append(carta(room_width/2 + 700 - 320 + camera.x,200 + camera.y,None,2))
     cartas.append(carta(room_width/2 - 160 + camera.x,200 + camera.y,None,1))
 
 def listPlayers():
     return playerList
-        
+
 #CRIANDO OS BLOCOS
 blocos = []
 blocos.append(obj_bloco(spr_bloco,0,room_height - spr_bloco.get_height()))
@@ -550,7 +558,7 @@ camera = obj_camera()
 efeitos = []
 efeitos_deposito = []
 cartas = []
-#spawn_cards() #COMENTE E DESCOMENTE PARA SPAWNAR AS CARTAS
+spawn_cards() #COMENTE E DESCOMENTE PARA SPAWNAR AS CARTAS
 card_selected = 0
 vez = 0
 
@@ -559,8 +567,12 @@ vez = 0
 jogador1 = obj_jogador('wherewolf',0,0,0)
 jogador2 = obj_jogador('homi',100,0,1)
 playerList = [jogador1, jogador2]
+jogador1.enemy = jogador2
+jogador2.enemy = jogador1
+
 dash = False;attack = False
 dash2 = False;attack2 = False
+
 
 
 
@@ -585,7 +597,7 @@ while RODANDO: #game loop
     jogador2.step()                                     #Função de cógido geral "step" do jogador2
     jogador2.draw()                                     #Função de desenhar do jogador2
 
-    
+
     if act[0] == True:
         #Joga o player horizontalmente pra ultima direção que ele se moveu
         dir_ = 180*(jogador1.hspeed > 0)
@@ -644,7 +656,8 @@ while RODANDO: #game loop
     for f in efeitos:
         #Função de cógido geral "step" do efeito
         if(str(type(f)) == "<class 'projection.Projection'>"):
-            f.step(playerList)
+            f.step(playerList,fs.collisionList_hitbox(blocos,f.hitbox)[0])
+
             if(f.t > 0):
                 tup = list(f.draw())
                 window.blit(tup[0], (tup[1]+camera.x, tup[2] + camera.y))
@@ -681,7 +694,7 @@ while RODANDO: #game loop
                     card_selected = fs.loopValue(card_selected,0,2,+1)
                 else:
                     key[1] = True
-            
+
             if eventos.key == pg.K_w:
                 key[2] = True
             if eventos.key == pg.K_s:
@@ -714,7 +727,7 @@ while RODANDO: #game loop
 
             if eventos.key == pg.K_ESCAPE:
                 RODANDO = False
-        
+
         #SOLTOU A TECLA
         if eventos.type == pg.KEYUP:
 

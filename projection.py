@@ -3,6 +3,7 @@ import ctypes
 import fs
 import math
 import animation as an
+import cards_txt as ctxt
 
 
 class Projection(object): #define uma classe projeção
@@ -12,7 +13,7 @@ class Projection(object): #define uma classe projeção
 		self.t = _alive_time * 60		## tempo de atividade, em frames (a 64 fps)
 		self.owner = player_owner     							## player que criou (não interage com ele)
 		self.on_hit = on_hit_efx 								## dicionário com o nome e atributos dos métodos que serão executados quando acertar um alvo qualquer
-		self.passive = while_alive_efx	
+		self.passive = while_alive_efx
 		self.dir = di
 		self.van = vanish_on_hit						## dicionário com o nome e atributos dos métodos que serão executados enquanto a projeção estiver ativa
 		  										## recebe um objeto da classe Animator, criado fora da classe projection
@@ -20,7 +21,7 @@ class Projection(object): #define uma classe projeção
 
 	def draw(self): #função que desenha o obj na tela
 		spr = self.anim.play(self.anim.current)
-		a = pg.transform.scale(pg.transform.rotate(spr, self.dir), (spr.get_width()*1.5, spr.get_height()*1.5)), self.hitbox.x, self.hitbox.y - self.hitbox.height/6
+		a = pg.transform.scale(pg.transform.rotate(spr, self.dir), (int(spr.get_width()*1.5), int(spr.get_height()*1.5))), self.hitbox.x, self.hitbox.y - self.hitbox.height/6
 		return a
 
 	def vanish(self): ## função para desaparecer/desativar
@@ -42,12 +43,20 @@ class Projection(object): #define uma classe projeção
 		self.hitbox.y += _speed[1] ## atualiza posição no eixo y
 
 	def damage(self, dmg, knockback, tg):
-		k = []
-		k.append(knockback*math.cos(self.dir*2*math.pi/360))
-		k.append(knockback*math.sin(self.dir*2*math.pi/360) + 1)
-		tg.takeDamage(dmg, k)
+		if tg != None:
+			k = []
+			k.append(knockback*math.cos(self.dir*2*math.pi/360))
+			k.append(knockback*math.sin(self.dir*2*math.pi/360) + 1)
+			tg.takeDamage(dmg, k)
 
-	def step(self, plist):
+	def explode(self,*args):
+		self.anim.play('explode')
+		self.t = 30
+
+	def block_contact(self,*args):
+		return 0
+
+	def step(self, plist, is_colliding):
 		if(self.t > 0):											## enquanto estiver ativo
 			self.t -= 1											## diminua o tempo ativo
 			self.anim.play(self.anim.animations[0].name)
@@ -62,6 +71,17 @@ class Projection(object): #define uma classe projeção
 						fullargs.append(i)
 						hitfx = getattr(Projection, j)
 						hitfx(self, *tuple(fullargs))
+					self.vanish()
+
+			#COLLIDING WITH BLOCKS
+			if is_colliding and ('block_contact' in self.on_hit):
+				for j in self.on_hit:
+					fullargs = self.on_hit.get(j)
+					fullargs.append(None) #its colliding with the player "None"
+					hitfx = getattr(Projection, j)
+					hitfx(self, *tuple(fullargs))
+
+				self.vanish()
+
 												## para cada string j com o nome de um método que roda ao contato dentro do dicionário
 						#getattr()[j](*tuple(fullargs))				## procure localmente e execute o método de nome j com os argumentos associados a ele no dicionário
-					self.vanish()
