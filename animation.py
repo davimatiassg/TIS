@@ -26,8 +26,12 @@ class Animator:
 
     def play(self, a): ##roda uma animação
         if a in self.names:
-            self.current = a
-            return self.animations[self.names.index(a)].play()
+        	b = self.current
+        	self.current = a
+        	if b == self.current:
+        		return self.animations[self.names.index(a)].play()
+        	else:
+        		return self.animations[self.names.index(a)].playFrame(0)
 
     def playFrame(self, a, i): ## retorna um frame específico de uma animação
         if a in self.names:
@@ -49,17 +53,17 @@ class Animation: ## classe que armazena animações
         self.valid = False
         self.idx = 0
         listd = os.listdir(folder + '/')
+        listd.sort(key=fLen)
         for f in listd:
             if (f.endswith(".png") and f.startswith(prefix)):
-                self.frames.append(pg.image.load(folder + '/'+f).convert_alpha())
-                if len(self.frames) == 1:
-                    self.valid = True
+            	self.frames.append(pg.image.load(folder + '/'+f).convert_alpha())
+            	if len(self.frames) == 1:
+            		self.valid = True
         self.fps = fps
-
 
     def play(self): #roda a animação na velocidade normal
         if(self.valid):
-            self.idx = fs.loopValue(self.idx, 0, len(self.frames)-1, self.fps/64)
+            self.idx = fs.loopAnim(self.idx, 0, len(self.frames)-1, self.fps/64)
             return self.frames[int(self.idx)]
 
     def playFrame(self, i): #retorna um frame específico da animação
@@ -88,3 +92,6 @@ class blankAnim(Animation):
 
     def playActualFrame(self):
         return play(self)
+
+def fLen(e):
+  return len(e)

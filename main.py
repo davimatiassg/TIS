@@ -82,8 +82,8 @@ class obj_jogador(object):
         self.player_ = player_
         self.sc = 2
 
-        moves = ['idle', 'run', 'jump', 'tkdmg']
-        frameRates = [8, 12, 16, 16]
+        moves = ['idle', 'run', 'jump', 'tkdmg', 'atk']
+        frameRates = [8, 12, 16, 16, 30]
         self.anim = an.Animator(moves, frameRates, char, 'char_')
         self.current_spr = self.anim.play('idle')
 
@@ -95,7 +95,7 @@ class obj_jogador(object):
         self.Hp = 50 #Vida
         self.maxHp = self.Hp
         self.Atk = 4 #Dano
-        self.AtkRange = 10 #Range do Atk
+        self.AtkRange = 7 #Range do Atk
         self.hspeed = 0 #velocidade horizontal
         self.vspeed = 0 #velocidade vertical
         self.speed = 0 #velocidade total
@@ -125,6 +125,7 @@ class obj_jogador(object):
         self.APPLIES_BLEEDING = False;self.TIME_BLEEDING = 0
 
     def getPlayerInput(self, klist, alist):
+        
         if self.unabletime <= 0:
             for j in range(len(klist)): #movimentando o personagem com base no input
             #k = 0 é A
@@ -140,14 +141,15 @@ class obj_jogador(object):
                         self.last_direction_moved = +1
                     if self.on_ground == True:
                         if j == 2: self.vspeed -= self.jump
-                        if j == 3: pass #futuro código para agachar :o
+
 
             for i in range(len(alist)):
                 if alist[i]:
                     if i == 0 and self.dash_cooldown <= 0:
                         self.hspeed += 1.75*self.last_direction_moved
                         self.dash_cooldown = 40
-                    if i == 1:
+                    if i == 1 and self.atk_cooldown <=0:
+                        self.atk_cooldown = 15
                         if self.HAS_FIRE_BALL:
                             if fs.pointDistance(self.x,self.y,self.enemy.x,self.enemy.y) > ctxt.FIREBALL_ATK_RANGE:
                                 self.CARDfireball()
@@ -162,11 +164,11 @@ class obj_jogador(object):
             self.vspeed += knk[1]
             self.Hp -= d
             self.unabletime = int(((knk[0]**2 + knk[1]**2)**(1/2)) *10/self.knockresi)
-            self.invtime = self.unabletime * 5/3
+            self.invtime = self.unabletime *self.knockresi* 5/3
 
     def DefaultAtk(self):
         #Normal Attack
-        atk_args = (self, self.hspeed + self.x + self.hit_box.width*0.2 + self.last_direction_moved*(self.hit_box.width + self.AtkRange),
+        atk_args = (self, self.hspeed + self.x + self.hit_box.width*self.sc/4 + self.last_direction_moved*(self.hit_box.width + self.AtkRange),
             self.y + self.hit_box.height/5, (90 -(90*self.last_direction_moved)), 0.15, self.Atk, self.knockback)
         efeitos.append(chd.charAtk(self.char, atk_args))
 
@@ -177,12 +179,10 @@ class obj_jogador(object):
         efeitos.append(chd.charAtk('fireball', atk_args))
 
     def step(self): #função que executa o cógido geral do jogador
-        if self.invtime > 0:
-            self.invtime -= 1
-        if self.unabletime > 0:
-            self.unabletime -= 1
-        if self.dash_cooldown > 0:
-            self.dash_cooldown -= 1
+        if self.atk_cooldown > 0: self.atk_cooldown-=1
+        if self.invtime > 0: self.invtime -= 1
+        if self.unabletime > 0: self.unabletime -= 1
+        
         if self.Hp > 0:
             #Verificando se ele está no chão (da tela)
             if self.y >= room_height - self.hit_box.height:
@@ -310,10 +310,13 @@ class obj_jogador(object):
             else:
 
                 if self.on_ground:
-                    if abs(self.hspeed) > 0:
-                        self.current_spr = self.anim.play('run')
+                    if self.atk_cooldown <= 0:
+                        if abs(self.hspeed) > 0:
+                            self.current_spr = self.anim.play('run')
+                        else:
+                            self.current_spr = self.anim.play('idle')
                     else:
-                        self.current_spr = self.anim.play('idle')
+                        self.current_spr = self.anim.play('atk')
                 else:
                     self.current_spr = self.anim.play('jump')
 
@@ -750,7 +753,7 @@ while RODANDO: #game loop
         #Função de cógido geral "step" do efeito
         if(str(type(f)) == "<class 'projection.Projection'>"):
             f.step(playerList,fs.collisionList_hitbox(blocos,f.hitbox)[0])
-
+            
             if(f.t > 0):
                 tup = list(f.draw())
                 window.blit(tup[0], (tup[1]+camera.x, tup[2] + camera.y))

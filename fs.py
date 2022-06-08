@@ -57,6 +57,16 @@ def loopValue(value_,min_,max_,_speed):
     else:
         return min_
 
+def loopAnim(value_,min_,max_,_speed):
+    #print('current {}; framerate {}; nxt{}'.format(value_,_speed, value_+_speed) )
+    if value_ + _speed <= max_+0.5:
+        if value_ + _speed >= min_-0.5:
+            return value_ + _speed
+        else:
+            return max_
+    else:
+        return min_
+
 #Loops values
 def getAllRects():
     r = []
