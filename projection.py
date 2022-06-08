@@ -21,8 +21,10 @@ class Projection(object): #define uma classe projeção
 
 	def draw(self): #função que desenha o obj na tela
 		spr = self.anim.play(self.anim.current)
-		a = pg.transform.scale(pg.transform.rotate(spr, self.dir), (int(spr.get_width()*1.5), int(spr.get_height()*1.5))), self.hitbox.x, self.hitbox.y - self.hitbox.height/6
-		return a
+		a = pg.transform.rotate(pg.transform.scale(spr,(int(spr.get_width()*1.5),int(spr.get_height()*1.5))), self.dir)
+
+		new_rect = a.get_rect(center = a.get_rect(topleft = (self.hitbox.x, self.hitbox.y - self.hitbox.height/6)).center)
+		return a, new_rect.x, new_rect.y
 
 	def vanish(self): ## função para desaparecer/desativar
 		self.hibox = pg.Rect(0, 0, 0, 0)

@@ -38,7 +38,7 @@ key = [False,False,False,False]       #lista ulitlizada na movimentação do jog
 act = [False, False]                         #lista ulitlizada nos ataques do jogador1
 key2 = [False,False,False,False]     #lista ulitlizada na movimentação do jogador2
 act2 = [False, False]                       #lista ulitlizada nos ataques do jogador2
-FPS = 64 #ITS 64 BECAUSE YES (dont change)
+FPS = 65 #ITS 64 BECAUSE YES (dont change)
 VERYSMALL = 0.001
 VERBIG = 10**5
 WHITE = (255,255,255)
@@ -76,7 +76,7 @@ snd_sound = pg.mixer.Sound("z4.wav")
 
 #OBJETOS / CLASSES / FUNÇÕES
 class obj_jogador(object):
-    def __init__(self, char, x,y,player_):
+    def __init__(self, char, x, y, player_):
         #Caracteristicas do obj definidas na criação
         self.char = char
         self.player_ = player_
@@ -90,6 +90,8 @@ class obj_jogador(object):
         self.hit_box = pg.Rect(x,y,self.current_spr.get_height()*self.sc, self.current_spr.get_width()*self.sc)
         self.x = x
         self.y = y
+        self.start_x = x
+        self.start_y = y
 
         #Caracteristicas gerais do obj
         self.Hp = 50 #Vida
@@ -121,8 +123,14 @@ class obj_jogador(object):
         self.enemy = self #Plottwistico
 
         #CARDs stuff
-        self.HAS_FIRE_BALL = False
-        self.APPLIES_BLEEDING = False;self.TIME_BLEEDING = 0
+        self.HAS_FIRE_BALL = False;self.FIRE_BALL_AMMOUNT = 0
+        self.APPLIES_BLEEDING = False;self.TIME_BLEEDING = 0;self.BLEEDING_DAMAGE = 0
+        self.ATK_WHILE_DASHING = False
+        self.ATKESQUIVA = False;self.FIRST_ATK_AFTER_DASH = False
+        self.APLIES_MORE_KNOCKBACK = 1
+        self.SURVIVAL_ATK_MULTPLIER = 1
+        self.SPIKES = False
+        self.NO_SEE = False;self.TIME_NO_SEE = 1
 
     def getPlayerInput(self, klist, alist):
         if self.unabletime <= 0:
@@ -139,7 +147,10 @@ class obj_jogador(object):
                         self.hspeed += self.hacel
                         self.last_direction_moved = +1
                     if self.on_ground == True:
-                        if j == 2: self.vspeed -= self.jump
+                        if j == 2:
+                            self.vspeed -= self.jump
+                            if self.SPIKES:
+                                self.CARDspikes()
                         if j == 3: pass #futuro código para agachar :o
 
             for i in range(len(alist)):
@@ -147,7 +158,8 @@ class obj_jogador(object):
                     if i == 0 and self.dash_cooldown <= 0:
                         self.hspeed += 1.75*self.last_direction_moved
                         self.dash_cooldown = 40
-                    if i == 1:
+                        self.FIRST_ATK_AFTER_DASH = True
+                    if i == 1 and (abs(self.hspeed) <= self.lower_max_hspeed + 0.1 or self.ATK_WHILE_DASHING == True):
                         if self.HAS_FIRE_BALL:
                             if fs.pointDistance(self.x,self.y,self.enemy.x,self.enemy.y) > ctxt.FIREBALL_ATK_RANGE:
                                 self.CARDfireball()
@@ -157,24 +169,68 @@ class obj_jogador(object):
                             self.DefaultAtk()
 
     def takeDamage(self, d, knk):
-        if self.invtime <= 0:
-            self.hspeed += knk[0]
-            self.vspeed += knk[1]
+        if self.invtime <= 0 or self.ATKESQUIVA:
+            self.hspeed += knk[0]/self.knockresi
+            self.vspeed += knk[1]/self.knockresi
             self.Hp -= d
-            self.unabletime = int(((knk[0]**2 + knk[1]**2)**(1/2)) *10/self.knockresi)
+            self.unabletime = int( ( (knk[0]**2 + knk[1]**2)**(1/2) )*10/self.knockresi)
             self.invtime = self.unabletime * 5/3
+            if self.NO_SEE == True:
+                self.TIME_NO_SEE = ctxt.NO_SEE_COOLDOWN
 
     def DefaultAtk(self):
         #Normal Attack
-        atk_args = (self, self.hspeed + self.x + self.hit_box.width*0.2 + self.last_direction_moved*(self.hit_box.width + self.AtkRange),
-            self.y + self.hit_box.height/5, (90 -(90*self.last_direction_moved)), 0.15, self.Atk, self.knockback)
+
+        atk_increase_ = 0
+
+        atk_increase_ += (ctxt.ATKESQUIVA_INCREASE)*(self.ATKESQUIVA == True)*(self.FIRST_ATK_AFTER_DASH == True)
+
+        atk_mult = 1*( self.SURVIVAL_ATK_MULTPLIER**(self.Hp/self.maxHp < ctxt.SURVIVAL_MIN_HP) )
+
+        #atk_args = (self, self.hspeed + self.x + self.hit_box.width*0.2 + self.last_direction_moved*(self.hit_box.width + self.AtkRange),
+        #    self.y + self.hit_box.height/5, (90 -(90*self.last_direction_moved)), 0.15, (self.Atk + atk_increase_)*atk_mult, self.knockback*self.APLIES_MORE_KNOCKBACK)
+
+        atk_args = (self,self.x + self.last_direction_moved*(self.AtkRange + abs(self.hspeed))*15,
+            self.y + self.hit_box.height/5, (90 -(90*self.last_direction_moved)), 0.15, (self.Atk + atk_increase_)*atk_mult, self.knockback*self.APLIES_MORE_KNOCKBACK)
+
         efeitos.append(chd.charAtk(self.char, atk_args))
+
+        self.FIRST_ATK_AFTER_DASH = False
 
     def CARDfireball(self):
         #FireBall Attack
         atk_args = (self, self.hspeed + self.x + self.hit_box.width*0.2 + self.last_direction_moved*(self.hit_box.width + self.AtkRange),
             self.y + self.hit_box.height/5, (90 -(90*self.last_direction_moved)), ctxt.FIREBALL_ATIME, ctxt.FIREBALL_ATK, ctxt.FIREBALL_KNOCKBACK)
         efeitos.append(chd.charAtk('fireball', atk_args))
+
+        if self.FIRE_BALL_AMMOUNT > 1:
+            for i in range(self.FIRE_BALL_AMMOUNT - 1):
+                atk_args = (self, self.hspeed + self.x + self.hit_box.width*0.2 + self.last_direction_moved*(self.hit_box.width + self.AtkRange),
+                    self.y + self.hit_box.height/5, random.randint(0,359), ctxt.FIREBALL_ATIME, ctxt.FIREBALL_ATK, ctxt.FIREBALL_KNOCKBACK)
+                efeitos.append(chd.charAtk('fireball', atk_args))
+
+    def CARDspikes(self):
+        #SPIKES
+        y_ = self.y
+        while True:
+            y_ += 5
+            collides = fs.collisionList(blocos,(self.x + self.hit_box.height/2 ,y_))
+            if collides[0] == True or y_ >= room_height:
+                break;
+
+        if collides[0] == True:
+            y_ = collides[1].y - self.hit_box.height
+        else:
+            y_ = room_height - self.hit_box.height
+
+        atk_args = (self,self.x + self.hit_box.width/2,
+            y_ + 25, 0, ctxt.SPIKES_ATIME/60, ctxt.SPIKES_DAMAGE, 1.3)
+        efeitos.append(chd.charAtk('spikes', atk_args))
+
+    def restart(self):
+        self.Hp = self.maxHp
+        self.x = self.start_x
+        self.y = self.start_y
 
     def step(self): #função que executa o cógido geral do jogador
         if self.invtime > 0:
@@ -285,8 +341,6 @@ class obj_jogador(object):
                 #certificando que o obj não está acelerando em direção ao chão
                 if self.vspeed > 0: self.vspeed = 0
 
-            if abs(self.hspeed) > self.max_hspeed: self.hspeed = self.max_hspeed*fs.sign(self.hspeed) #max speed
-
             #vetores muahaha
             self.speed = (self.hspeed**2 + self.vspeed**2 )**(1/2)
             self.direction = 360*(1/(2*math.pi))*(self.speed)
@@ -297,8 +351,17 @@ class obj_jogador(object):
             #bleeding
             if self.TIME_BLEEDING > 0:
                 if fs.divs(self.TIME_BLEEDING,ctxt.BLEEDING_RATE) == True:
-                    self.takeDamage(ctxt.BLEEDING_DAMAGE,[0,0])
+                    self.takeDamage(self.enemy.BLEEDING_DAMAGE,[0,0])
                 self.TIME_BLEEDING -= 1
+
+        else: #Player Has Died
+            jogador1.restart()
+            jogador2.restart()
+            points[self.player_] += 1
+            global Round
+            Round += 1
+            vez = [self.player_,self.enemy.player_]
+            spawn_cards()
 
     def draw(self): #função que desenha o jogador na tela
         if self.Hp > 0:
@@ -324,7 +387,12 @@ class obj_jogador(object):
 
             sprite_virado = pg.transform.flip(sprite_2x,self.last_direction_moved < 0,False)
 
-            window.blit(sprite_virado, (self.x + camera.x, self.y + camera.y))
+            #Being Invisible
+            if self.TIME_NO_SEE > 0:
+                window.blit(sprite_virado, (self.x + camera.x, self.y + camera.y))
+                if self.NO_SEE == True: self.TIME_NO_SEE -= 1
+            else:
+                self.TIME_NO_SEE = 0
 
             #Drawing Healthbar
             if self.player_ == 0:
@@ -589,12 +657,28 @@ def spawn_cards():
 def apply_card_effect(player_,card_):
     if card_.tipo_ == "FIREBALL":
         player_.HAS_FIRE_BALL = True
+        player_.FIRE_BALL_AMMOUNT += 1
     if card_.tipo_ == "ENHANCED_SPEED":
         player_.lower_max_hspeed *= ctxt.ENHANCED_SPEED_PERCENT
         player_.max_hspeed *= ctxt.ENHANCED_SPEED_PERCENT
         player_.hacel *= ctxt.ENHANCED_SPEED_PERCENT
     if card_.tipo_ == "BLEEDING":
         player_.APPLIES_BLEEDING = True
+        player_.BLEEDING_DAMAGE += ctxt.BLEEDING_DAMAGE
+    if card_.tipo_ == "ATK_WHILE_DASHING":
+        player_.ATK_WHILE_DASHING = True
+    if card_.tipo_ == "ATKESQUIVA":
+        player_.ATKESQUIVA = True
+    if card_.tipo_ == "APLIES_MORE_KNOCKBACK":
+        player_.APLIES_MORE_KNOCKBACK *= ctxt.APLIES_MORE_KNOCKBACK
+    if card_.tipo_ == "RECEIVES_LESS_KNOCKBACK":
+        player_.knockresi *= ctxt.RECEIVES_LESS_KNOCKBACK
+    if card_.tipo_ == "SURVIVAL":
+        player_.SURVIVAL_ATK_MULTPLIER *= ctxt.SURVIVAL_ATK_MULTPLIER
+    if card_.tipo_ == "SPIKES":
+        player_.SPIKES = True
+    if card_.tipo_ == "NO_SEE":
+        player_.NO_SEE = True
 
     return 0
 
@@ -644,14 +728,16 @@ efeitos = []
 efeitos_deposito = []
 cartas = []
 cartas_deposito = []
-spawn_cards() #COMENTE E DESCOMENTE PARA SPAWNAR AS CARTAS
+#spawn_cards() #COMENTE E DESCOMENTE PARA SPAWNAR AS CARTAS
 card_selected = 0
 vez = [0,1] #lista que armazena a ordem de escolha de cartas
+points = [0,0]
+Round = 0
 
 #CRIANDO OS JOAGDORES
 
-jogador1 = obj_jogador('wherewolf',0,0,0)
-jogador2 = obj_jogador('homi',100,0,1)
+jogador1 = obj_jogador('wherewolf',100,0,0)
+jogador2 = obj_jogador('homi',room_width - 100,0,1)
 playerList = [jogador1, jogador2]
 jogador1.enemy = jogador2
 jogador2.enemy = jogador1
@@ -661,6 +747,7 @@ dash2 = False;attack2 = False
 
 last_time = time.time()
 
+pg.mouse.set_visible(False)
 
 while RODANDO: #game loop
 
@@ -676,8 +763,10 @@ while RODANDO: #game loop
     #pg.display.set_caption("{}".format(clock.get_fps())) #mostra o fps no título da tela
     #print(clock.get_fps())
 
-    draw_text("ROUND 1",rel_width/2 + room_width/2,rel_height/2 + 64,color_ = (255,0,0))
-    draw_text(str(clock.get_fps()),rel_width/2 + room_width/2,rel_height/2 + 128,color_ = (255,0,0))
+    draw_text("ROUND " + str(Round),rel_width/2 + room_width/2,rel_height/2 + 64,color_ = (255,0,0))
+    draw_text(str(points[0]) + " | " + str(points[0]),rel_width/2 + room_width/2,rel_height/2 + 130,color_ = (255,0,0))
+
+    draw_text(str(int(clock.get_fps()*100)/100),rel_width/2 + room_width/2,rel_height/2 + 190,color_ = (255,0,0),font_ = fnt_comicsans[1])
 
     #---CODIGO DO JOGADOR
 
@@ -687,7 +776,6 @@ while RODANDO: #game loop
     jogador2.getPlayerInput(key2, act2)       #Função para realizar o controle do jogador 2 com base nas inputs do teclado
     jogador2.step()                                     #Função de cógido geral "step" do jogador2
     jogador2.draw()                                     #Função de desenhar do jogador2
-
 
 
     if act[0] == True:
@@ -753,7 +841,7 @@ while RODANDO: #game loop
 
             if(f.t > 0):
                 tup = list(f.draw())
-                window.blit(tup[0], (tup[1]+camera.x, tup[2] + camera.y))
+                window.blit(tup[0], (tup[1] + camera.x, tup[2] + camera.y))
             else:
                 efeitos.remove(f)
                 f.vanish()
