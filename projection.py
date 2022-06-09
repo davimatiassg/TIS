@@ -7,9 +7,14 @@ import cards_txt as ctxt
 
 
 class Projection(object): #define uma classe projeção
-	def __init__(self, anim, x, y, di, player_owner, on_hit_efx, while_alive_efx, _alive_time, vanish_on_hit):
+	def __init__(self, anim, x, y, di, player_owner, on_hit_efx, while_alive_efx, _alive_time, vanish_on_hit, sc = 1):
+		self.scale = sc 
 		self.anim = anim
-		self.hitbox = pg.Rect(x,y,self.anim.playFrame(anim.names[0], 0).get_height(), self.anim.playFrame(anim.names[0], 0).get_width()) 						## hitbox da projeção
+		a = player_owner.anim.getCurrentFrame()
+
+		tx = self.anim.playFrame(anim.names[0], 0).get_height()
+		ty = self.anim.playFrame(anim.names[0], 0).get_width()
+		self.hitbox = pg.Rect(x + a.get_width()/2 , y + a.get_height()/2,tx, ty) 						## hitbox da projeção
 		self.t = _alive_time * 60		## tempo de atividade, em frames (a 64 fps)
 		self.owner = player_owner     							## player que criou (não interage com ele)
 		self.on_hit = on_hit_efx 								## dicionário com o nome e atributos dos métodos que serão executados quando acertar um alvo qualquer
@@ -27,11 +32,11 @@ class Projection(object): #define uma classe projeção
 		return a, new_rect.x, new_rect.y
 
 	def vanish(self): ## função para desaparecer/desativar
-		self.hibox = pg.Rect(0, 0, 0, 0)
 		self.on_hit = []
 		self.passive = []
 		if(self.van):
 			self.anim = self.anim.clearAnim()
+			self.hitbox = pg.Rect(0, 0, 0, 0)
 			self.t = 0
 		## (ainda não tá pronta)
 
@@ -51,9 +56,12 @@ class Projection(object): #define uma classe projeção
 			k.append(knockback*math.sin(self.dir*2*math.pi/360) + 1)
 			tg.takeDamage(dmg, k)
 
+	def lifesteal(self, player, dmg, tg):
+		player.Hp += dmg/4
+
 	def explode(self,*args):
 		self.anim.play('explode')
-		self.t = 30
+		self.t = args[0]
 
 	def bleeding(self, applies_, tg):
 		if applies_ == True: tg.TIME_BLEEDING = ctxt.BLEEDING_TIME
