@@ -57,7 +57,16 @@ def spikes(player, x, y, di, atime, dmg, knk):
 	'damage': [dmg, knk]
 	}
 	pfx = {
-	'move':[[ctxt.FIREBALL_SPEED*player.last_direction_moved, 0]]
+	'move':[[ctxt.FIREBALL_SPEED*math.cos((2*math.pi)*di/360), ctxt.FIREBALL_SPEED*math.sin((2*math.pi)*di/360)]]
+	}
+	return pj.Projection(anim, x, y, di, player, hfx, pfx, atime, False)
+
+def spikes(player, x, y, di, atime, dmg, knk):
+	anim = an.Animator(['spikes'], [3/0.8], 'spikes', 'fx_')
+	hfx = {
+	'damage': [dmg, knk]
+	}
+	pfx = {
 	}
 	return pj.Projection(anim, x, y, di, player, hfx, pfx, atime, False, 2)
 	return pj.Projection(anim, x, y, di, player, hfx, pfx, atime, False)
