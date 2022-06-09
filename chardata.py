@@ -19,7 +19,7 @@ def claws(player, x, y, di, atime, dmg, knk):
 	hfx = {
 	'damage': [dmg, knk],
 	'bleeding': [player.APPLIES_BLEEDING],
-	'lifesteal':[player, dmg]
+	'lifesteal':[player, dmg],
 	'bleeding': [player.APPLIES_BLEEDING]
 	}
 	pfx = {
