@@ -21,18 +21,17 @@ class Projection(object): #define uma classe projeção
 		self.passive = while_alive_efx
 		self.dir = di
 		self.van = vanish_on_hit						## dicionário com o nome e atributos dos métodos que serão executados enquanto a projeção estiver ativa
-		 										## recebe um objeto da classe Animator, criado fora da classe projection
+		  										## recebe um objeto da classe Animator, criado fora da classe projection
 
 
 	def draw(self): #função que desenha o obj na tela
 		spr = self.anim.play(self.anim.current)
-		ax = spr.get_width()*self.scale
-		ay = spr.get_height()*self.scale
-		a = pg.transform.scale(pg.transform.rotate(spr, self.dir), (ax, ay)), self.hitbox.x - ax/2, self.hitbox.y - ay/2
-		return a
+		a = pg.transform.rotate(pg.transform.scale(spr,(int(spr.get_width()*1.5),int(spr.get_height()*1.5))), self.dir)
+
+		new_rect = a.get_rect(center = a.get_rect(topleft = (self.hitbox.x, self.hitbox.y - self.hitbox.height/6)).center)
+		return a, new_rect.x, new_rect.y
 
 	def vanish(self): ## função para desaparecer/desativar
-		
 		self.on_hit = []
 		self.passive = []
 		if(self.van):
