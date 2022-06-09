@@ -373,7 +373,7 @@ class obj_jogador(object):
             else:
 
                 if self.on_ground:
-                    if self.atk_cooldown <= 0:
+                    if self.     <= 0:
                         if abs(self.hspeed) > 0:
                             self.current_spr = self.anim.play('run')
                         else:
