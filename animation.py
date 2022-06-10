@@ -38,6 +38,20 @@ class Animator:
             self.current = a
             return self.animations[self.names.index(a)].playFrame(i)
 
+    def getAnimLength(self, a):
+        if a in self.names:
+            return len(self.animations[self.names.index(a)].frames)
+
+
+    def getAnim(self, a):
+        if a in self.names:
+            return self.animations[self.names.index(a)]
+        else:
+            return self.animations[self.names.index(self.current)]
+
+    def getDuration(self):
+        return self.animations[self.names.index(self.current)].duration
+
     def clearAnim(self):
         self.names = ['blank']
         self.current = self.names[0]
@@ -50,6 +64,7 @@ class Animation: ## classe que armazena animações
     def __init__(self, name, fps, folder, a_type, prefix): ##
         self.name = name
         self.frames = []
+
         self.valid = False
         self.idx = 0
         listd = os.listdir(folder + '/')
@@ -60,12 +75,12 @@ class Animation: ## classe que armazena animações
             	if len(self.frames) == 1:
             		self.valid = True
         self.fps = fps
+        self.duration = len(self.frames) * fps
 
     def play(self): #roda a animação na velocidade normal
         if(self.valid):
             self.idx = fs.loopAnim(self.idx, 0, len(self.frames)-1, self.fps/65)
             #self.idx = fs.loopValue(self.idx, 0, len(self.frames) - 0.01, self.fps/65)
-            print(self.idx)
             return self.frames[int(self.idx)]
 
     def playFrame(self, i): #retorna um frame específico da animação

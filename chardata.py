@@ -57,7 +57,5 @@ def spikes(player, x, y, di, atime, dmg, knk):
 	'damage': [dmg, knk]
 	}
 	pfx = {
-	'move':[[ctxt.FIREBALL_SPEED*player.last_direction_moved, 0]]
 	}
 	return pj.Projection(anim, x, y, di, player, hfx, pfx, atime, False, 2)
-	return pj.Projection(anim, x, y, di, player, hfx, pfx, atime, False)

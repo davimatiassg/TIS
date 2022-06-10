@@ -78,8 +78,8 @@ class obj_jogador(object):
         self.player_ = player_
         self.sc = 2
 
-        moves = ['idle', 'run', 'jump', 'tkdmg', 'atk']
-        frameRates = [8, 12, 16, 16, 30]
+        moves = ['idle', 'run', 'jump', 'tkdmg', 'atk', 'D_atk', 'A_atk']
+        frameRates = [8, 12, 16, 16, 16, 16, 16]
         self.anim = an.Animator(moves, frameRates, char, 'char_')
         self.current_spr = self.anim.play('idle')
 
@@ -117,7 +117,8 @@ class obj_jogador(object):
         self.knockback = 1.25 #knockback aplicado ao inimigo
         self.knockresi = 1 #resistência ao knockback: 1 = nenhuma resitência; 2 = 50% resistência; 3 = 66% de resistência e assim por diante.
         self.enemy = self #Plottwistico
-
+        self.isAtacking = False  #está atacando?
+        self.isCrouch = False #está agachado?
         #CARDs stuff
         self.HAS_FIRE_BALL = False;self.FIRE_BALL_AMMOUNT = 0
         self.APPLIES_BLEEDING = False;self.TIME_BLEEDING = 0;self.BLEEDING_DAMAGE = 0
@@ -142,27 +143,27 @@ class obj_jogador(object):
                     if j == 1 and self.hspeed < self.lower_max_hspeed:
                         self.hspeed += self.hacel
                         self.last_direction_moved = +1
+                        self.isCrouch = (self.on_ground and j == 3)
                     if self.on_ground == True:
                         if j == 2:
                             self.vspeed -= self.jump
                             if self.SPIKES:
                                 self.CARDspikes()
-                        if j == 3: pass #futuro código para agachar :o
 
             for i in range(len(alist)):
                 if alist[i]:
                     if i == 0 and self.dash_cooldown <= 0:
                         self.hspeed += 1.75*self.last_direction_moved
-                        self.dash_cooldown = 40
-                    if i == 1 and self.atk_cooldown <=0:
-                        self.atk_cooldown = 15
+                        self.dash_cooldown = 45
+                        
+                    if i == 1 and self.atk_cooldown <=0 and (abs(self.hspeed) <= self.lower_max_hspeed + 0.1 or self.ATK_WHILE_DASHING == True):
+                        self.isAtacking = True
+                        self.atk_cooldown = FPS #1 segundo, a 64 fps
                         self.FIRST_ATK_AFTER_DASH = True
-                    if i == 1 and (abs(self.hspeed) <= self.lower_max_hspeed + 0.1 or self.ATK_WHILE_DASHING == True):
-                        if self.HAS_FIRE_BALL:
-                            if fs.pointDistance(self.x,self.y,self.enemy.x,self.enemy.y) > ctxt.FIREBALL_ATK_RANGE:
-                                self.CARDfireball()
-                            else:
-                                self.DefaultAtk()
+                        if self.HAS_FIRE_BALL and fs.pointDistance(self.x,self.y,self.enemy.x,self.enemy.y) > ctxt.FIREBALL_ATK_RANGE:
+                            self.CARDfireball()
+                        elif(self.isCrouch):
+                            self.DownAtk()
                         else:
                             self.DefaultAtk()
 
@@ -190,6 +191,24 @@ class obj_jogador(object):
 
         atk_args = (self,self.x + self.last_direction_moved*((self.AtkRange + abs(self.hspeed))*15 - self.hit_box.width/2 ),
             self.y + self.hit_box.height/5, (90 -(90*self.last_direction_moved)), 0.15, (self.Atk + atk_increase_)*atk_mult, self.knockback*self.APLIES_MORE_KNOCKBACK)
+
+        efeitos.append(chd.charAtk(self.char, atk_args))
+
+        self.FIRST_ATK_AFTER_DASH = False
+        
+    def DownAtk(self):
+        #Normal Attack
+
+        atk_increase_ = 0
+
+        atk_increase_ += (ctxt.ATKESQUIVA_INCREASE)*(self.ATKESQUIVA == True)*(self.FIRST_ATK_AFTER_DASH == True)
+
+        atk_mult = 1*( self.SURVIVAL_ATK_MULTPLIER**(self.Hp/self.maxHp < ctxt.SURVIVAL_MIN_HP) )
+
+        #atk_args = (self, self.hspeed + self.x + self.hit_box.width*0.2 + self.last_direction_moved*(self.hit_box.width + self.AtkRange),
+        #    self.y + self.hit_box.height/5, (90 -(90*self.last_direction_moved)), 0.15, (self.Atk + atk_increase_)*atk_mult, self.knockback*self.APLIES_MORE_KNOCKBACK)
+
+        atk_args = (self, self.x - self.hit_box.width/2 , self.y - self.hit_box.height, 90, 0.15, (self.Atk + atk_increase_)*atk_mult, self.knockback*self.APLIES_MORE_KNOCKBACK)
 
         efeitos.append(chd.charAtk(self.char, atk_args))
 
@@ -232,7 +251,11 @@ class obj_jogador(object):
         self.TIME_BLEEDING = 0
 
     def step(self): #função que executa o cógido geral do jogador
-        if self.atk_cooldown > 0: self.atk_cooldown-=1
+        if self.atk_cooldown > 0:
+            self.atk_cooldown-=1
+            b = self.anim.getDuration()/2*FPS
+            if self.atk_cooldown < b or self.atk_cooldown <= 0:
+                self.isAtacking = False
         if self.invtime > 0: self.invtime -= 1
         if self.unabletime > 0: self.unabletime -= 1
         
@@ -366,25 +389,29 @@ class obj_jogador(object):
     def draw(self): #função que desenha o jogador na tela
         if self.Hp > 0:
             #Animation loop
-            self.current_spr = self.anim.current
+            self.current_spr = self.anim.getCurrentFrame()
 
             if self.unabletime > 0:
                 self.current_spr = self.anim.play('tkdmg')
             else:
-
-                if self.on_ground:
-                    if self.atk_cooldown <= 0:
-                        if abs(self.hspeed) > 0:
-                            self.current_spr = self.anim.play('run')
+                if self.isAtacking:
+                    if self.on_ground:
+                        if self.isCrouch:
+                            self.current_spr = self.anim.play('D_atk')
                         else:
-                            self.current_spr = self.anim.play('idle')
-                    if abs(self.hspeed) > 0:
-                        self.current_spr = self.anim.play('run')
+                            self.current_spr = self.anim.play('atk')
                     else:
-                        self.current_spr = self.anim.play('atk')
-                        self.current_spr = self.anim.play('idle')
+                        self.current_spr = self.anim.play('A_atk')
                 else:
-                    self.current_spr = self.anim.play('jump')
+                    if self.on_ground:
+                        if self.atk_cooldown <= 0:
+                            if abs(self.hspeed) > 0:
+                                self.current_spr = self.anim.play('run')
+                            else:
+                                self.current_spr = self.anim.play('idle')
+                    else:
+                        self.current_spr = self.anim.play('jump')
+                    
 
             sprite_2x = pg.transform.scale(self.current_spr,
             (int(self.current_spr.get_width()*self.sc),int(self.current_spr.get_height()*self.sc)))
