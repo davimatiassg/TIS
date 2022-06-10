@@ -17,10 +17,12 @@ class TileMap():
         self.tile_size = 32
         self.start_x, self.start_y = stpx, stpy
         self.tiles = self.load_tiles(filename)
+        self.hitmesh = self.tiles[0].hit_box
+        for i in self.tiles:
+            self.hitmesh = self.hitmesh.union(i.hit_box)
         self.map_surface = pygame.Surface((self.map_w, self.map_h))
         self.map_surface.set_colorkey((0, 0, 0))
         self.load_map()
-        pygame.image.save(self.map_surface, 'mapa.png')
 
     def draw_map(self, surface, stpx, stpy):
 

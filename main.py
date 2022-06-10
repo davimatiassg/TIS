@@ -172,7 +172,6 @@ class obj_jogador(object):
                         
                     if (i == 1 and self.atk_cooldown <= 0) and (abs(self.hspeed) <= self.lower_max_hspeed + 0.1 or self.ATK_WHILE_DASHING == True):
                         self.isAtacking = True
-                        print(self.char)
                         self.atk_cooldown = self.atk_delay
                         self.FIRST_ATK_AFTER_DASH = True
                         if(self.isCrouch):
@@ -800,7 +799,7 @@ while RODANDO: #game loop
     #last_time = time.time()
 
     window.fill((25, 25, 25)) #fundo da tela fica cinza escuro
-    blocos.draw_map(window, rel_width/2, rel_height/2)
+    #blocos.draw_map(window, rel_width/2, rel_height/2)
     #draw_text(str(int(200*dt_)/200),rel_width/2 + room_width/2,rel_height/2 + 230,color_ = (255,0,0))
 
     #pg.display.set_caption("{}".format(clock.get_fps())) #mostra o fps no título da tela
