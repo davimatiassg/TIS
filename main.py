@@ -9,7 +9,7 @@ import chardata as chd
 import projection as pj
 import cards_txt as ctxt
 import time
-
+from tiles import *
 #SETUP DA TELA (só mexa no width e height)
 pg.init()
 clock = pg.time.Clock()
@@ -81,10 +81,10 @@ class obj_jogador(object):
         #Caracteristicas do obj definidas na criação
         self.char = char
         self.player_ = player_
-        self.sc = 2.5
+        self.sc = 2
 
         moves = ['idle', 'run', 'jump', 'tkdmg', 'atk', 'D_atk', 'A_atk']
-        frameRates = [8, 12, 16, 16, 32, 24, 32]
+        frameRates = [8, 12, 16, 16, 32, 20, 32]
         self.anim = an.Animator(moves, frameRates, char, 'char_')
         self.current_spr = self.anim.play('idle')
 
@@ -248,7 +248,7 @@ class obj_jogador(object):
         y_ = self.y
         while True:
             y_ += 5
-            collides = fs.collisionList(blocos,(self.x + self.hit_box.height/2 ,y_))
+            collides = fs.collisionList(blocos.tiles,(self.x + self.hit_box.height/2 ,y_))
             if collides[0] == True or y_ >= room_height:
                 break;
 
@@ -304,7 +304,7 @@ class obj_jogador(object):
             #Passa por cada ponto (menos os da borda) da parte mais esquerda ou direita do retângulo
             collided_horizontally = False
             for h_ in range(self.hit_box.height):
-                var_colisao = fs.collisionList(blocos, (side_ + self.hspeed*dt,self.hit_box.y + h_))
+                var_colisao = fs.collisionList(blocos.tiles, (side_ + self.hspeed*dt,self.hit_box.y + h_))
 
                 if var_colisao[0] == True:
 
@@ -341,7 +341,7 @@ class obj_jogador(object):
             #Passa por cada ponto (menos os da borda) da parte mais em baixo ou em cima do retângulo
             collided_vertically = False
             for w_ in range(self.hit_box.width - 1):
-                var_colisao = fs.collisionList(blocos,(self.hit_box.x + w_ + 1,side_ + self.vspeed*dt))
+                var_colisao = fs.collisionList(blocos.tiles,(self.hit_box.x + w_ + 1,side_ + self.vspeed*dt))
 
                 if var_colisao[0] == True:
                     collidee = var_colisao[1] #Colidido da collisionList || "collidee" é o colidido
@@ -761,16 +761,7 @@ def escolhendo_cartas(player_):
         cartas.clear()
 
 #CRIANDO OS BLOCOS
-blocos = []
-blocos.append(obj_bloco(spr_bloco,0,room_height - spr_bloco.get_height()))
-blocos.append(obj_bloco(spr_bloco,64,room_height - spr_bloco.get_height()))
-blocos.append(obj_bloco(spr_bloco,0,room_height - 64 -  spr_bloco.get_height()))
-blocos.append(obj_bloco(spr_bloco,room_width - 256,room_height - 64*4 - spr_bloco.get_height()))
-blocos.append(obj_bloco(spr_bloco,room_width - 640,room_height - spr_bloco.get_height()))
-blocos.append(obj_bloco(spr_bloco,room_width - 640,room_height - 64*1 - spr_bloco.get_height()))
-blocos.append(obj_bloco(spr_bloco,room_width - 640,room_height - 64*2 - spr_bloco.get_height()))
-blocos.append(obj_bloco(spr_bloco,room_width - 640 - 64,room_height - 64*2 - spr_bloco.get_height()))
-blocos.append(obj_bloco(spr_bloco,room_width - 640 - 128,room_height - 64*2 - spr_bloco.get_height()))
+blocos = TileMap('forest', rel_width, rel_height)
 
 #CRIANDO ADEMAIS
 
@@ -786,7 +777,7 @@ vez = [0,1] #lista que armazena a ordem de escolha de cartas
 points = [0,0]
 Round = 0
 
-#CRIANDO OS JOAGDORES
+#CRIANDO OS JOGADORES
 
 jogador1 = obj_jogador('wherewolf',100,0,0)
 jogador2 = obj_jogador('homi',room_width - 100,0,1)
@@ -809,7 +800,7 @@ while RODANDO: #game loop
     #last_time = time.time()
 
     window.fill((25, 25, 25)) #fundo da tela fica cinza escuro
-
+    blocos.draw_map(window, rel_width/2, rel_height/2)
     #draw_text(str(int(200*dt_)/200),rel_width/2 + room_width/2,rel_height/2 + 230,color_ = (255,0,0))
 
     #pg.display.set_caption("{}".format(clock.get_fps())) #mostra o fps no título da tela
@@ -882,14 +873,13 @@ while RODANDO: #game loop
 
 
     #---CODIGO DOS BLOCOS
-    for b in blocos:
-        b.draw() #Função de desenhar do bloco
+    #Função de desenhar do bloco
 
     #---CODIGOS ALEATORIOS
     for f in efeitos:
         #Função de cógido geral "step" do efeito
         if(str(type(f)) == "<class 'projection.Projection'>"):
-            f.step(playerList,fs.collisionList_hitbox(blocos,f.hitbox)[0])
+            f.step(playerList,fs.collisionList_hitbox(blocos.tiles,f.hitbox)[0])
 
             if(f.t > 0):
                 tup = list(f.draw())
