@@ -477,8 +477,8 @@ class obj_bloco(object):
 class obj_camera(object):
     def __init__(self):
         #Caracteristicas do obj definidas na criação
-        self.x = room_width/2
-        self.y = room_height/2
+        self.x = 0
+        self.y = 0
 
         #Caracteristicas gerais do obj
         self.screen_shake_time = 0
@@ -502,8 +502,8 @@ class obj_camera(object):
             self.x = fs.clamp(self.x,room_width/2 - 30,room_width/2 + 30)
             self.y = fs.clamp(self.y,room_height/2 - 30,room_height/2 + 30)
         else:
-            self.x = room_width/2
-            self.y = room_height/2
+            self.x = 0
+            self.y = 0
 
     def screenShake(self,_screen_shake_time,intensity_ = 20):
         self.screen_shake_time = _screen_shake_time
