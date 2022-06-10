@@ -75,12 +75,14 @@ class Animation: ## classe que armazena animações
             	if len(self.frames) == 1:
             		self.valid = True
         self.fps = fps
-        self.duration = len(self.frames) * fps
+        self.duration = len(self.frames)/fps
+        #print("animação {}, DURAÇÃO DE {} FRAMES a {} fps".format(self.name, self.idx+1, len(self.frames)))
 
     def play(self): #roda a animação na velocidade normal
         if(self.valid):
             self.idx = fs.loopAnim(self.idx, 0, len(self.frames)-1, self.fps/65)
             #self.idx = fs.loopValue(self.idx, 0, len(self.frames) - 0.01, self.fps/65)
+            #print("animação {}, frame {} de {}".format(self.name, self.idx+1, len(self.frames)))
             return self.frames[int(self.idx)]
 
     def playFrame(self, i): #retorna um frame específico da animação

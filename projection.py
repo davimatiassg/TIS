@@ -57,8 +57,11 @@ class Projection(object): #define uma classe projeção
 			tg.takeDamage(dmg, k)
 
 	def lifesteal(self, player, dmg, tg):
-		player.Hp += dmg/4
-
+		if player.Hp < player.maxHp:
+			player.Hp += dmg/4
+			if player.Hp > player.maxHp:
+				player.Hp = player.maxHp
+				
 	def explode(self,*args):
 		self.anim.play('explode')
 		self.t = args[0]
