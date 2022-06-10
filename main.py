@@ -16,9 +16,9 @@ clock = pg.time.Clock()
 ctypes.windll.user32.SetProcessDPIAware()
 window_width = ctypes.windll.user32.GetSystemMetrics(0)
 window_height = ctypes.windll.user32.GetSystemMetrics(1)
-gamewindow = pg.display.set_mode((window_width,window_height),pg.FULLSCREEN)
+window = pg.display.set_mode((window_width,window_height),pg.FULLSCREEN)
 
-window = pg.image.load('Graphics/level_forest/f.png').convert_alpha()
+#window = pg.image.load('Graphics/level_forest/f.png').convert_alpha()
 
 pg.font.init()
 fnt_comicsans = [ # FONT SIZES
@@ -31,8 +31,11 @@ pg.font.SysFont('Comic Sans MS', 45)
 fnt_comicsans_Vspace = [30,40,50,60,70]
 
 #VARIAVEIS GLOBAIS
-room_width = 576 #1280
-room_height = 324 #720
+room_width = 1600 #1280
+room_height = 900 #720
+rel_width = window_width - room_width
+rel_height = window_height - room_height
+raz = window_width/room_width
 RODANDO = True
 key = [False,False,False,False]       #lista ulitlizada na movimentação do jogador1
 act = [False, False]                         #lista ulitlizada nos ataques do jogador1
@@ -445,20 +448,20 @@ class obj_jogador(object):
 
             #Drawing Healthbar
             if self.player_ == 0:
-                draw_rectangle(room_width/2,room_height/2,
-                room_width/2 + 500,room_height/2 + 80,(0,100,0))
+                draw_rectangle(rel_width/2,rel_height/2,
+                rel_width/2 + 500,rel_height/2 + 80,(0,100,0))
 
-                draw_rectangle(room_width/2,room_height/2,
-                room_width/2 + 500*(self.Hp/self.maxHp),room_height/2 + 80,GREEN)
+                draw_rectangle(rel_width/2,rel_height/2,
+                rel_width/2 + 500*(self.Hp/self.maxHp),rel_height/2 + 80,GREEN)
 
-                draw_text(self.char,room_width/2 + 250,room_height/2 + 40,color_ = BLACK)
+                draw_text(self.char,rel_width/2 + 250,rel_height/2 + 40,color_ = BLACK)
 
             if self.player_ == 1:
-                draw_rectangle(room_width/2 + room_width - 500,room_height/2,
-                room_width/2 + room_width,room_height/2 + 80,(0,100,0))
-                draw_rectangle(room_width/2 + room_width - 500*(self.Hp/self.maxHp),
-                room_height/2,room_width/2 + room_width,room_height/2 + 80,GREEN)
-                draw_text(self.char,room_width/2 + room_width - 250,room_height/2 + 40,color_ = BLACK)
+                draw_rectangle(rel_width/2 + room_width - 500,rel_height/2,
+                rel_width/2 + room_width,rel_height/2 + 80,(0,100,0))
+                draw_rectangle(rel_width/2 + room_width - 500*(self.Hp/self.maxHp),
+                rel_height/2,rel_width/2 + room_width,rel_height/2 + 80,GREEN)
+                draw_text(self.char,rel_width/2 + room_width - 250,rel_height/2 + 40,color_ = BLACK)
 
 class obj_bloco(object):
     def __init__(self,spr,x,y):
@@ -477,8 +480,8 @@ class obj_bloco(object):
 class obj_camera(object):
     def __init__(self):
         #Caracteristicas do obj definidas na criação
-        self.x = 0
-        self.y = 0
+        self.x = rel_width/2
+        self.y = rel_height/2
 
         #Caracteristicas gerais do obj
         self.screen_shake_time = 0
@@ -488,10 +491,10 @@ class obj_camera(object):
         #window.blit(spr_hit[0], (self.x, self.y))
 
         #Desenhando bordas
-        #draw_rectangle(0,0,room_width/2,window_height,color_ = BLACK)
-        #draw_rectangle(window_width - room_width/2,0,window_width,window_height,color_ = BLACK)
-        #draw_rectangle(0,window_height - room_height/2,window_width,window_height,color_ = BLACK)
-        #draw_rectangle(room_width/2,0,window_width - room_width/2,room_height/2,color_ = BLACK)
+        draw_rectangle(0,0,rel_width/2,window_height,color_ = BLACK)
+        draw_rectangle(window_width - rel_width/2,0,window_width,window_height,color_ = BLACK)
+        draw_rectangle(0,window_height - rel_height/2,window_width,window_height,color_ = BLACK)
+        draw_rectangle(rel_width/2,0,window_width - rel_width/2,rel_height/2,color_ = BLACK)
 
         #STEP :O
         if self.screen_shake_time > 0:
@@ -499,11 +502,11 @@ class obj_camera(object):
             self.x += random.randint(-self.screen_shake_intensity,self.screen_shake_intensity)
             self.y += random.randint(-self.screen_shake_intensity,self.screen_shake_intensity)
 
-            self.x = fs.clamp(self.x,room_width/2 - 30,room_width/2 + 30)
-            self.y = fs.clamp(self.y,room_height/2 - 30,room_height/2 + 30)
+            self.x = fs.clamp(self.x,rel_width/2 - 30,rel_width/2 + 30)
+            self.y = fs.clamp(self.y,rel_height/2 - 30,rel_height/2 + 30)
         else:
-            self.x = 0
-            self.y = 0
+            self.x = rel_width/2
+            self.y = rel_height/2
 
     def screenShake(self,_screen_shake_time,intensity_ = 20):
         self.screen_shake_time = _screen_shake_time
@@ -807,15 +810,15 @@ while RODANDO: #game loop
 
     window.fill((25, 25, 25)) #fundo da tela fica cinza escuro
 
-    #draw_text(str(int(200*dt_)/200),room_width/2 + room_width/2,room_height/2 + 230,color_ = (255,0,0))
+    #draw_text(str(int(200*dt_)/200),rel_width/2 + room_width/2,rel_height/2 + 230,color_ = (255,0,0))
 
     #pg.display.set_caption("{}".format(clock.get_fps())) #mostra o fps no título da tela
     #print(clock.get_fps())
 
-    draw_text("ROUND " + str(Round),room_width/2 + room_width/2,room_height/2 + 64,color_ = (255,0,0))
-    draw_text(str(points[0]) + " | " + str(points[1]),room_width/2 + room_width/2,room_height/2 + 130,color_ = (255,0,0))
+    draw_text("ROUND " + str(Round),rel_width/2 + room_width/2,rel_height/2 + 64,color_ = (255,0,0))
+    draw_text(str(points[0]) + " | " + str(points[1]),rel_width/2 + room_width/2,rel_height/2 + 130,color_ = (255,0,0))
 
-    draw_text(str(int(clock.get_fps()*100)/100),room_width/2 + room_width/2,room_height/2 + 190,color_ = (255,0,0),font_ = fnt_comicsans[1])
+    draw_text(str(int(clock.get_fps()*100)/100),rel_width/2 + room_width/2,rel_height/2 + 190,color_ = (255,0,0),font_ = fnt_comicsans[1])
 
     #---CODIGO DO JOGADOR
 
@@ -911,7 +914,8 @@ while RODANDO: #game loop
 
 
     #FIM DOS DESENHOS NA TELA
-    gamewindow.blit(pg.transform.scale(window,(window_width/room_width, window_height/room_height)), (0, 0))
+    #p = pg.transform.scale(window, (window.get_width() *raz, window.get_height() * raz))
+    #gamewindow.blit(window, (0, 0))
     pg.display.flip() #mostra td oq foi desenhado dentro desse loop
 
     #um loop que passa por tds os eventos registrados pelo pygame
