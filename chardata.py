@@ -14,7 +14,7 @@ char_atk = {
 	'spikes': 'spikes'
 }
 
-def claws(player, x, y, di, atime, dmg, knk):
+def claws(player, x, y, di, atime, dmg, knk, size = 1.5):
 	anim = an.Animator(['claws'], [32], 'claws', 'fx_')
 	hfx = {
 	'damage': [dmg, knk],
@@ -26,9 +26,9 @@ def claws(player, x, y, di, atime, dmg, knk):
 	'move':[[player.hspeed, player.vspeed]]
 	}
 
-	return pj.Projection(anim, x, y, di, player, hfx, pfx, atime, False, 1.5)
+	return pj.Projection(anim, x, y, di, player, hfx, pfx, atime, False, size)
 
-def homiatk(player, x, y, di, atime, dmg, knk):
+def homiatk(player, x, y, di, atime, dmg, knk, size = 1.5):
 	anim = an.Animator(['homiatk'], [15], 'homiatk', 'fx_')
 	hfx = {
 	'damage': [dmg, knk],
@@ -37,9 +37,9 @@ def homiatk(player, x, y, di, atime, dmg, knk):
 	pfx = {
 	'move':[[player.hspeed, player.vspeed]]
 	}
-	return pj.Projection(anim, x, y, di, player, hfx, pfx, atime, False, 1.5)
+	return pj.Projection(anim, x, y, di, player, hfx, pfx, atime, False, size)
 
-def fireball(player, x, y, di, atime, dmg, knk):
+def fireball(player, x, y, di, atime, dmg, knk, s = 2):
 	anim = an.Animator(['fireball','explode'], [9,35], 'fireball', 'fx_')
 	hfx = {
 	'damage': [dmg, knk],
@@ -49,13 +49,13 @@ def fireball(player, x, y, di, atime, dmg, knk):
 	pfx = {
 	'move':[[ctxt.FIREBALL_SPEED*math.cos((2*math.pi)*di/360), ctxt.FIREBALL_SPEED*math.sin((2*math.pi)*di/360)]]
 	}
-	return pj.Projection(anim, x, y, di, player, hfx, pfx, atime, False)
+	return pj.Projection(anim, x, y, di, player, hfx, pfx, atime, False, s)
 
-def spikes(player, x, y, di, atime, dmg, knk):
+def spikes(player, x, y, di, atime, dmg, knk, s = 2):
 	anim = an.Animator(['spikes'], [3/0.8], 'spikes', 'fx_')
 	hfx = {
 	'damage': [dmg, knk]
 	}
 	pfx = {
 	}
-	return pj.Projection(anim, x, y, di, player, hfx, pfx, atime, False, 2)
+	return pj.Projection(anim, x, y, di, player, hfx, pfx, atime, False, s)

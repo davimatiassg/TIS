@@ -9,7 +9,7 @@ import chardata as chd
 import projection as pj
 import cards_txt as ctxt
 import time
-
+from tiles import *
 #SETUP DA TELA (só mexa no width e height)
 pg.init()
 clock = pg.time.Clock()
@@ -17,6 +17,8 @@ ctypes.windll.user32.SetProcessDPIAware()
 window_width = ctypes.windll.user32.GetSystemMetrics(0)
 window_height = ctypes.windll.user32.GetSystemMetrics(1)
 window = pg.display.set_mode((window_width,window_height),pg.FULLSCREEN)
+
+#window = pg.image.load('Graphics/level_forest/f.png').convert_alpha()
 
 pg.font.init()
 fnt_comicsans = [ # FONT SIZES
@@ -33,6 +35,7 @@ room_width = 1600 #1280
 room_height = 900 #720
 rel_width = window_width - room_width
 rel_height = window_height - room_height
+raz = window_width/room_width
 RODANDO = True
 key = [False,False,False,False]       #lista ulitlizada na movimentação do jogador1
 act = [False, False]                         #lista ulitlizada nos ataques do jogador1
@@ -68,6 +71,8 @@ print(LISTA_DE_CARTAS)
 
 spr_bloco = pg.image.load('Graphics\sbloco.png').convert_alpha()
 
+spr_cursor = pg.image.load('Graphics\coord.png').convert_alpha()
+
 snd_sound = pg.mixer.Sound("z4.wav")
 
 #OBJETOS / CLASSES / FUNÇÕES
@@ -79,7 +84,7 @@ class obj_jogador(object):
         self.sc = 2
 
         moves = ['idle', 'run', 'jump', 'tkdmg', 'atk', 'D_atk', 'A_atk']
-        frameRates = [8, 12, 16, 16, 16, 16, 16]
+        frameRates = [8, 12, 16, 16, 32, 20, 32]
         self.anim = an.Animator(moves, frameRates, char, 'char_')
         self.current_spr = self.anim.play('idle')
 
@@ -93,7 +98,7 @@ class obj_jogador(object):
         self.Hp = 50 #Vida
         self.maxHp = self.Hp
         self.Atk = 4 #Dano
-        self.AtkRange = 10 #Range do Atk
+        self.AtkRange = 7 #Range do Atk
         self.hspeed = 0 #velocidade horizontal
         self.vspeed = 0 #velocidade vertical
         self.speed = 0 #velocidade total
@@ -114,6 +119,7 @@ class obj_jogador(object):
         self.dash_cooldown = 0 #variavel que da um tempo pro dash ser usando dnv
         self.dash_time = 40 #de qnt em qnt tempo o dash pode ser usado
         self.atk_cooldown = 0          #Armazena o tempo restante até poder usar o próximo ataque
+        self.atk_delay = 16 # tempo inicial para o próximo ataque, em frames (meio segundo a 64 fps).
         self.knockback = 1.25 #knockback aplicado ao inimigo
         self.knockresi = 1 #resistência ao knockback: 1 = nenhuma resitência; 2 = 50% resistência; 3 = 66% de resistência e assim por diante.
         self.enemy = self #Plottwistico
@@ -130,42 +136,52 @@ class obj_jogador(object):
         self.NO_SEE = False;self.TIME_NO_SEE = 1
 
     def getPlayerInput(self, klist, alist):
+        #marcadores de h i t b o x.
+        window.blit(spr_cursor, (self.hit_box.x + camera.x, self.hit_box.y + camera.y))
+        window.blit(spr_cursor, (self.hit_box.x + self.hit_box.width + camera.x, self.hit_box.y + self.hit_box.height+ camera.y))
+        #marcadores de h i t b o x.
+        
         if self.unabletime <= 0:
             for j in range(len(klist)): #movimentando o personagem com base no input
             #k = 0 é A
             #k = 1 é D
             #k = 2 é W
             #k = 3 é S
+                if j == 3:
+                    self.isCrouch = klist[j]
                 if klist[j]:
                     if j == 0 and self.hspeed > -self.lower_max_hspeed:
                         self.hspeed -= self.hacel
                         self.last_direction_moved = -1
                     if j == 1 and self.hspeed < self.lower_max_hspeed:
                         self.hspeed += self.hacel
-                        self.last_direction_moved = +1
-                        self.isCrouch = (self.on_ground and j == 3)
+                        self.last_direction_moved = +1                        
                     if self.on_ground == True:
                         if j == 2:
                             self.vspeed -= self.jump
                             if self.SPIKES:
                                 self.CARDspikes()
+                        
 
+            
             for i in range(len(alist)):
                 if alist[i]:
                     if i == 0 and self.dash_cooldown <= 0:
                         self.hspeed += 1.75*self.last_direction_moved
                         self.dash_cooldown = 45
                         
-                    if i == 1 and self.atk_cooldown <=0 and (abs(self.hspeed) <= self.lower_max_hspeed + 0.1 or self.ATK_WHILE_DASHING == True):
+                    if (i == 1 and self.atk_cooldown <= 0) and (abs(self.hspeed) <= self.lower_max_hspeed + 0.1 or self.ATK_WHILE_DASHING == True):
                         self.isAtacking = True
-                        self.atk_cooldown = FPS #1 segundo, a 64 fps
+                        self.atk_cooldown = self.atk_delay
                         self.FIRST_ATK_AFTER_DASH = True
-                        if self.HAS_FIRE_BALL and fs.pointDistance(self.x,self.y,self.enemy.x,self.enemy.y) > ctxt.FIREBALL_ATK_RANGE:
-                            self.CARDfireball()
-                        elif(self.isCrouch):
+                        if(self.isCrouch):
                             self.DownAtk()
                         else:
-                            self.DefaultAtk()
+                            if self.HAS_FIRE_BALL and fs.pointDistance(self.x,self.y,self.enemy.x,self.enemy.y) > ctxt.FIREBALL_ATK_RANGE:
+                                self.CARDfireball()
+                            else:
+                                self.DefaultAtk()
+                            
 
     def takeDamage(self, d, knk):
         if self.invtime <= 0 or self.ATKESQUIVA:
@@ -189,8 +205,8 @@ class obj_jogador(object):
         #atk_args = (self, self.hspeed + self.x + self.hit_box.width*0.2 + self.last_direction_moved*(self.hit_box.width + self.AtkRange),
         #    self.y + self.hit_box.height/5, (90 -(90*self.last_direction_moved)), 0.15, (self.Atk + atk_increase_)*atk_mult, self.knockback*self.APLIES_MORE_KNOCKBACK)
 
-        atk_args = (self,self.x + self.last_direction_moved*((self.AtkRange + abs(self.hspeed))*15 - self.hit_box.width/2 ),
-            self.y + self.hit_box.height/5, (90 -(90*self.last_direction_moved)), 0.15, (self.Atk + atk_increase_)*atk_mult, self.knockback*self.APLIES_MORE_KNOCKBACK)
+        atk_args = (self,self.x - self.hit_box.width*0.065 + self.last_direction_moved*((self.AtkRange + abs(self.hspeed))*15),
+            self.y, (90 -(90*self.last_direction_moved)), 0.15, (self.Atk + atk_increase_)*atk_mult, self.knockback*self.APLIES_MORE_KNOCKBACK)
 
         efeitos.append(chd.charAtk(self.char, atk_args))
 
@@ -208,7 +224,7 @@ class obj_jogador(object):
         #atk_args = (self, self.hspeed + self.x + self.hit_box.width*0.2 + self.last_direction_moved*(self.hit_box.width + self.AtkRange),
         #    self.y + self.hit_box.height/5, (90 -(90*self.last_direction_moved)), 0.15, (self.Atk + atk_increase_)*atk_mult, self.knockback*self.APLIES_MORE_KNOCKBACK)
 
-        atk_args = (self, self.x - self.hit_box.width/2 , self.y - self.hit_box.height, 90, 0.15, (self.Atk + atk_increase_)*atk_mult, self.knockback*self.APLIES_MORE_KNOCKBACK)
+        atk_args = (self, self.x - self.hit_box.width*0.06 , self.y - self.hit_box.height*0.7, 90, 0.15, (self.Atk + atk_increase_)*atk_mult, self.knockback*self.APLIES_MORE_KNOCKBACK, 4)
 
         efeitos.append(chd.charAtk(self.char, atk_args))
 
@@ -231,7 +247,7 @@ class obj_jogador(object):
         y_ = self.y
         while True:
             y_ += 5
-            collides = fs.collisionList(blocos,(self.x + self.hit_box.height/2 ,y_))
+            collides = fs.collisionList(blocos.tiles,(self.x + self.hit_box.height/2 ,y_))
             if collides[0] == True or y_ >= room_height:
                 break;
 
@@ -251,11 +267,14 @@ class obj_jogador(object):
         self.TIME_BLEEDING = 0
 
     def step(self): #função que executa o cógido geral do jogador
-        if self.atk_cooldown > 0:
+        if self.atk_cooldown >= 1:
             self.atk_cooldown-=1
-            b = self.anim.getDuration()/2*FPS
-            if self.atk_cooldown < b or self.atk_cooldown <= 0:
+            b = self.anim.getDuration()*FPS
+            if self.atk_cooldown < self.atk_delay-b:
                 self.isAtacking = False
+        else:
+            self.isAtacking = False
+        #print('ataca = {}, atk cd = {}'.format(self.isAtacking, self.atk_cooldown))
         if self.invtime > 0: self.invtime -= 1
         if self.unabletime > 0: self.unabletime -= 1
         
@@ -284,7 +303,7 @@ class obj_jogador(object):
             #Passa por cada ponto (menos os da borda) da parte mais esquerda ou direita do retângulo
             collided_horizontally = False
             for h_ in range(self.hit_box.height):
-                var_colisao = fs.collisionList(blocos, (side_ + self.hspeed*dt,self.hit_box.y + h_))
+                var_colisao = fs.collisionList(blocos.tiles, (side_ + self.hspeed*dt,self.hit_box.y + h_))
 
                 if var_colisao[0] == True:
 
@@ -321,7 +340,7 @@ class obj_jogador(object):
             #Passa por cada ponto (menos os da borda) da parte mais em baixo ou em cima do retângulo
             collided_vertically = False
             for w_ in range(self.hit_box.width - 1):
-                var_colisao = fs.collisionList(blocos,(self.hit_box.x + w_ + 1,side_ + self.vspeed*dt))
+                var_colisao = fs.collisionList(blocos.tiles,(self.hit_box.x + w_ + 1,side_ + self.vspeed*dt))
 
                 if var_colisao[0] == True:
                     collidee = var_colisao[1] #Colidido da collisionList || "collidee" é o colidido
@@ -404,11 +423,10 @@ class obj_jogador(object):
                         self.current_spr = self.anim.play('A_atk')
                 else:
                     if self.on_ground:
-                        if self.atk_cooldown <= 0:
-                            if abs(self.hspeed) > 0:
-                                self.current_spr = self.anim.play('run')
-                            else:
-                                self.current_spr = self.anim.play('idle')
+                        if abs(self.hspeed) > 0:
+                            self.current_spr = self.anim.play('run')
+                        else:
+                            self.current_spr = self.anim.play('idle')
                     else:
                         self.current_spr = self.anim.play('jump')
                     
@@ -742,16 +760,7 @@ def escolhendo_cartas(player_):
         cartas.clear()
 
 #CRIANDO OS BLOCOS
-blocos = []
-blocos.append(obj_bloco(spr_bloco,0,room_height - spr_bloco.get_height()))
-blocos.append(obj_bloco(spr_bloco,64,room_height - spr_bloco.get_height()))
-blocos.append(obj_bloco(spr_bloco,0,room_height - 64 -  spr_bloco.get_height()))
-blocos.append(obj_bloco(spr_bloco,room_width - 256,room_height - 64*4 - spr_bloco.get_height()))
-blocos.append(obj_bloco(spr_bloco,room_width - 640,room_height - spr_bloco.get_height()))
-blocos.append(obj_bloco(spr_bloco,room_width - 640,room_height - 64*1 - spr_bloco.get_height()))
-blocos.append(obj_bloco(spr_bloco,room_width - 640,room_height - 64*2 - spr_bloco.get_height()))
-blocos.append(obj_bloco(spr_bloco,room_width - 640 - 64,room_height - 64*2 - spr_bloco.get_height()))
-blocos.append(obj_bloco(spr_bloco,room_width - 640 - 128,room_height - 64*2 - spr_bloco.get_height()))
+blocos = TileMap('forest', rel_width, rel_height)
 
 #CRIANDO ADEMAIS
 
@@ -767,7 +776,7 @@ vez = [0,1] #lista que armazena a ordem de escolha de cartas
 points = [0,0]
 Round = 0
 
-#CRIANDO OS JOAGDORES
+#CRIANDO OS JOGADORES
 
 jogador1 = obj_jogador('wherewolf',100,0,0)
 jogador2 = obj_jogador('homi',room_width - 100,0,1)
@@ -790,7 +799,7 @@ while RODANDO: #game loop
     #last_time = time.time()
 
     window.fill((25, 25, 25)) #fundo da tela fica cinza escuro
-
+    #blocos.draw_map(window, rel_width/2, rel_height/2)
     #draw_text(str(int(200*dt_)/200),rel_width/2 + room_width/2,rel_height/2 + 230,color_ = (255,0,0))
 
     #pg.display.set_caption("{}".format(clock.get_fps())) #mostra o fps no título da tela
@@ -863,18 +872,23 @@ while RODANDO: #game loop
 
 
     #---CODIGO DOS BLOCOS
-    for b in blocos:
-        b.draw() #Função de desenhar do bloco
+    #Função de desenhar do bloco
 
     #---CODIGOS ALEATORIOS
     for f in efeitos:
         #Função de cógido geral "step" do efeito
         if(str(type(f)) == "<class 'projection.Projection'>"):
-            f.step(playerList,fs.collisionList_hitbox(blocos,f.hitbox)[0])
+            f.step(playerList,fs.collisionList_hitbox(blocos.tiles,f.hitbox)[0])
 
             if(f.t > 0):
                 tup = list(f.draw())
                 window.blit(tup[0], (tup[1] + camera.x, tup[2] + camera.y))
+                
+                #marcadores de h i t b o x.
+                window.blit(spr_cursor, (tup[1] + camera.x, tup[2] + camera.y))
+                window.blit(spr_cursor, (tup[1] + camera.x + tup[0].get_width(), tup[2] + tup[0].get_height() + camera.y))
+                #marcadores de h i t b o x.
+                
             else:
                 efeitos.remove(f)
                 f.vanish()
@@ -889,6 +903,8 @@ while RODANDO: #game loop
 
 
     #FIM DOS DESENHOS NA TELA
+    #p = pg.transform.scale(window, (window.get_width() *raz, window.get_height() * raz))
+    #gamewindow.blit(window, (0, 0))
     pg.display.flip() #mostra td oq foi desenhado dentro desse loop
 
     #um loop que passa por tds os eventos registrados pelo pygame
@@ -986,6 +1002,7 @@ while RODANDO: #game loop
         #FECHOU A JANELA
         if eventos.type == pg.QUIT:
             RODANDO = False
+        
 
 #FIM
 print("jogo finalizado")
