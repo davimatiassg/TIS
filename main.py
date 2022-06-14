@@ -81,7 +81,7 @@ class obj_jogador(object):
         #Caracteristicas do obj definidas na criação
         self.char = char
         self.player_ = player_
-        self.sc = 2
+        self.sc = 2.5
 
         moves = ['idle', 'run', 'jump', 'tkdmg', 'atk', 'D_atk', 'A_atk', 'Crouch']
         frameRates = [8, 12, 16, 16, 32, 20, 32, 8]
@@ -285,8 +285,8 @@ class obj_jogador(object):
 
     def restart(self):
         self.Hp = self.maxHp
-        self.x = self.start_x
-        self.y = self.start_y
+        self.hit_box.x = self.start_x
+        self.hit_box.y = self.start_y
         self.TIME_BLEEDING = 0
 
     def getCollisions(self, tiles):
@@ -838,8 +838,8 @@ Round = 0
 
 #CRIANDO OS JOGADORES
 
-jogador1 = obj_jogador('wherewolf',250,60,0)
-jogador2 = obj_jogador('homi',room_width - 250,60,1)
+jogador1 = obj_jogador('wherewolf',250,450,0)
+jogador2 = obj_jogador('homi',room_width - 250,450,1)
 playerList = [jogador1, jogador2]
 jogador1.enemy = jogador2
 jogador2.enemy = jogador1
