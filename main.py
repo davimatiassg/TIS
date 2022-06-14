@@ -81,7 +81,7 @@ class obj_jogador(object):
         #Caracteristicas do obj definidas na criação
         self.char = char
         self.player_ = player_
-        self.sc = 1.75
+        self.sc = 2
 
         moves = ['idle', 'run', 'jump', 'tkdmg', 'atk', 'D_atk', 'A_atk', 'Crouch']
         frameRates = [8, 12, 16, 16, 32, 20, 32, 8]
@@ -207,8 +207,8 @@ class obj_jogador(object):
         #atk_args = (self, self.hspeed + self.x + self.hit_box.width*0.2 + self.last_direction_moved*(self.hit_box.width + self.AtkRange),
         #    self.y + self.hit_box.height/5, (90 -(90*self.last_direction_moved)), 0.15, (self.Atk + atk_increase_)*atk_mult, self.knockback*self.APLIES_MORE_KNOCKBACK)
 
-        atk_args = (self,self.x - self.hit_box.width*0.065 + self.last_direction_moved*((self.AtkRange + abs(self.hspeed))*15),
-            self.y, (90 -(90*self.last_direction_moved)), 0.15, (self.Atk + atk_increase_)*atk_mult, self.knockback*self.APLIES_MORE_KNOCKBACK)
+        atk_args = (self,self.hit_box.x + self.hit_box.width/2 + self.last_direction_moved*self.AtkRange*15,
+            self.y +self.hit_box.height/4, (90 -(90*self.last_direction_moved)), 0.15, (self.Atk + atk_increase_)*atk_mult, self.knockback*self.APLIES_MORE_KNOCKBACK)
 
         efeitos.append(chd.charAtk(self.char, atk_args))
 
@@ -226,7 +226,7 @@ class obj_jogador(object):
         #atk_args = (self, self.hspeed + self.x + self.hit_box.width*0.2 + self.last_direction_moved*(self.hit_box.width + self.AtkRange),
         #    self.y + self.hit_box.height/5, (90 -(90*self.last_direction_moved)), 0.15, (self.Atk + atk_increase_)*atk_mult, self.knockback*self.APLIES_MORE_KNOCKBACK)
 
-        atk_args = (self, self.x - self.hit_box.width*0.06 , self.y - self.hit_box.height*0.7, 90, 0.15, (self.Atk + atk_increase_)*atk_mult, self.knockback*self.APLIES_MORE_KNOCKBACK, 4)
+        atk_args = (self, self.x + self.hit_box.width/2 , self.y - self.hit_box.height*0.5, 90, 0.15, (self.Atk + atk_increase_)*atk_mult, self.knockback*self.APLIES_MORE_KNOCKBACK, 7)
 
         efeitos.append(chd.charAtk(self.char, atk_args))
 
@@ -247,7 +247,7 @@ class obj_jogador(object):
                 #atk_args = (self, self.hspeed + self.x + self.hit_box.width*0.2 + self.last_direction_moved*(self.hit_box.width + self.AtkRange),
                 #    self.y + self.hit_box.height/5, (90 -(90*self.last_direction_moved)), 0.15, (self.Atk + atk_increase_)*atk_mult, self.knockback*self.APLIES_MORE_KNOCKBACK)
 
-                atk_args = (self, self.x - self.hit_box.width*0.06 , self.y + self.hit_box.height*1.1, 270, 0.15, (self.Atk + atk_increase_)*atk_mult, self.knockback*self.APLIES_MORE_KNOCKBACK, 4)
+                atk_args = (self, self.x + self.hit_box.width/2, self.y + self.hit_box.height*1.1, 270, 0.15, (self.Atk + atk_increase_)*atk_mult, self.knockback*self.APLIES_MORE_KNOCKBACK, 4)
 
                 efeitos.append(chd.charAtk(self.char, atk_args))
 
@@ -460,7 +460,7 @@ class obj_jogador(object):
             vez = [self.player_,self.enemy.player_]
             jogador1.restart()
             jogador2.restart()
-            #spawn_cards()
+            spawn_cards()
 
     def draw(self): #função que desenha o jogador na tela
         if self.Hp > 0:
@@ -820,6 +820,7 @@ def escolhendo_cartas(player_):
 
 #CRIANDO OS BLOCOS
 blocos = TileMap('forest', rel_width, rel_height)
+bg = pg.transform.scale(pg.image.load('Graphics/background/'+'forest'+'.png').convert(),(window_width - rel_width - 64, window_height - rel_height-64))
 
 #CRIANDO ADEMAIS
 
@@ -829,7 +830,7 @@ efeitos = []
 efeitos_deposito = []
 cartas = []
 cartas_deposito = []
-#spawn_cards() #COMENTE E DESCOMENTE PARA SPAWNAR AS CARTAS
+spawn_cards() #COMENTE E DESCOMENTE PARA SPAWNAR AS CARTAS
 card_selected = 0
 vez = [0,1] #lista que armazena a ordem de escolha de cartas
 points = [0,0]
@@ -858,6 +859,7 @@ while RODANDO: #game loop
     #last_time = time.time()
 
     window.fill((25, 25, 25)) #fundo da tela fica cinza escuro
+    window.blit(bg, (rel_width/2 + 32, rel_height/2 + 60)) #fundo da tela fica cinza escuro
     window.blit(*(blocos.draw_map_mesh(window, rel_width/2, rel_height/2)))
     #draw_text(str(int(200*dt_)/200),rel_width/2 + room_width/2,rel_height/2 + 230,color_ = (255,0,0))
 

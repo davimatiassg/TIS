@@ -23,7 +23,7 @@ def claws(player, x, y, di, atime, dmg, knk, size = 1.5):
 	'bleeding': [player.APPLIES_BLEEDING]
 	}
 	pfx = {
-	'move':[[player.hspeed, player.vspeed]]
+	'move':[[player.hspeed*8, player.vspeed*8]]
 	}
 
 	return pj.Projection(anim, x, y, di, player, hfx, pfx, atime, False, size)
@@ -35,7 +35,7 @@ def homiatk(player, x, y, di, atime, dmg, knk, size = 1.5):
 	'bleeding': [player.APPLIES_BLEEDING]
 	}
 	pfx = {
-	'move':[[player.hspeed, player.vspeed]]
+	'move':[[player.hspeed*8, player.vspeed*8]]
 	}
 	return pj.Projection(anim, x, y - 15, di, player, hfx, pfx, atime, False, size)
 
