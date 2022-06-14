@@ -14,7 +14,7 @@ class Tile(pygame.sprite.Sprite):
 
 class TileMap():
     def __init__(self, filename, stpx, stpy):
-        self.tile_size = 32
+        self.tile_size = 64
         self.start_x, self.start_y = stpx, stpy
         self.tiles = self.load_tiles(filename)
         self.hitmesh = self.tiles[0].hit_box
@@ -25,8 +25,10 @@ class TileMap():
         self.load_map()
 
     def draw_map(self, surface, stpx, stpy):
-
         surface.blit(self.map_surface, (stpx, stpy))
+
+    def draw_map_mesh(self, surface, stpx, stpy):
+        return(self.map_surface, (stpx, stpy))
 
     def load_map(self):
         for tile in self.tiles:

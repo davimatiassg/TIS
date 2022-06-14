@@ -14,7 +14,7 @@ class Projection(object): #define uma classe projeção
 
 		tx = self.anim.playFrame(anim.names[0], 0).get_height()
 		ty = self.anim.playFrame(anim.names[0], 0).get_width()
-		self.hitbox = pg.Rect(x + a.get_width()/2 , y + a.get_height()/2,tx, ty) 						## hitbox da projeção
+		self.hitbox = pg.Rect(x , y,tx, ty) 						## hitbox da projeção
 		self.t = _alive_time * 60		## tempo de atividade, em frames (a 64 fps)
 		self.owner = player_owner     							## player que criou (não interage com ele)
 		self.on_hit = on_hit_efx 								## dicionário com o nome e atributos dos métodos que serão executados quando acertar um alvo qualquer

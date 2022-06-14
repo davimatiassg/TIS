@@ -37,7 +37,7 @@ def homiatk(player, x, y, di, atime, dmg, knk, size = 1.5):
 	pfx = {
 	'move':[[player.hspeed, player.vspeed]]
 	}
-	return pj.Projection(anim, x, y, di, player, hfx, pfx, atime, False, size)
+	return pj.Projection(anim, x, y - 15, di, player, hfx, pfx, atime, False, size)
 
 def fireball(player, x, y, di, atime, dmg, knk, s = 2):
 	anim = an.Animator(['fireball','explode'], [9,35], 'fireball', 'fx_')

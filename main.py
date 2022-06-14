@@ -81,10 +81,10 @@ class obj_jogador(object):
         #Caracteristicas do obj definidas na criação
         self.char = char
         self.player_ = player_
-        self.sc = 2
+        self.sc = 1.75
 
-        moves = ['idle', 'run', 'jump', 'tkdmg', 'atk', 'D_atk', 'A_atk']
-        frameRates = [8, 12, 16, 16, 32, 20, 32]
+        moves = ['idle', 'run', 'jump', 'tkdmg', 'atk', 'D_atk', 'A_atk', 'Crouch']
+        frameRates = [8, 12, 16, 16, 32, 20, 32, 8]
         self.anim = an.Animator(moves, frameRates, char, 'char_')
         self.current_spr = self.anim.play('idle')
 
@@ -98,7 +98,7 @@ class obj_jogador(object):
         self.Hp = 50 #Vida
         self.maxHp = self.Hp
         self.Atk = 4 #Dano
-        self.AtkRange = 7 #Range do Atk
+        self.AtkRange = 8 #Range do Atk
         self.hspeed = 0 #velocidade horizontal
         self.vspeed = 0 #velocidade vertical
         self.speed = 0 #velocidade total
@@ -174,7 +174,9 @@ class obj_jogador(object):
                         self.isAtacking = True
                         self.atk_cooldown = self.atk_delay
                         self.FIRST_ATK_AFTER_DASH = True
-                        if(self.isCrouch):
+                        if(klist[2]):
+                            self.UpAtk()
+                        elif(self.isCrouch):
                             self.DownAtk()
                         else:
                             if self.HAS_FIRE_BALL and fs.pointDistance(self.x,self.y,self.enemy.x,self.enemy.y) > ctxt.FIREBALL_ATK_RANGE:
@@ -212,7 +214,7 @@ class obj_jogador(object):
 
         self.FIRST_ATK_AFTER_DASH = False
         
-    def DownAtk(self):
+    def UpAtk(self):
         #Normal Attack
 
         atk_increase_ = 0
@@ -230,12 +232,33 @@ class obj_jogador(object):
 
         self.FIRST_ATK_AFTER_DASH = False
 
+    def DownAtk(self):
+            if(self.on_ground):
+                self.UpAtk()
+            else:
+                #Normal Attack
+
+                atk_increase_ = 0
+
+                atk_increase_ += (ctxt.ATKESQUIVA_INCREASE)*(self.ATKESQUIVA == True)*(self.FIRST_ATK_AFTER_DASH == True)
+
+                atk_mult = 1*( self.SURVIVAL_ATK_MULTPLIER**(self.Hp/self.maxHp < ctxt.SURVIVAL_MIN_HP) )
+
+                #atk_args = (self, self.hspeed + self.x + self.hit_box.width*0.2 + self.last_direction_moved*(self.hit_box.width + self.AtkRange),
+                #    self.y + self.hit_box.height/5, (90 -(90*self.last_direction_moved)), 0.15, (self.Atk + atk_increase_)*atk_mult, self.knockback*self.APLIES_MORE_KNOCKBACK)
+
+                atk_args = (self, self.x - self.hit_box.width*0.06 , self.y + self.hit_box.height*1.1, 270, 0.15, (self.Atk + atk_increase_)*atk_mult, self.knockback*self.APLIES_MORE_KNOCKBACK, 4)
+
+                efeitos.append(chd.charAtk(self.char, atk_args))
+
+                self.FIRST_ATK_AFTER_DASH = False
+
     def CARDfireball(self):
         #FireBall Attack
         atk_args = (self, self.hspeed + self.x + self.hit_box.width*0.2 + self.last_direction_moved*(self.hit_box.width + self.AtkRange),
             self.y + self.hit_box.height/5, (90 -(90*self.last_direction_moved)), ctxt.FIREBALL_ATIME, ctxt.FIREBALL_ATK, ctxt.FIREBALL_KNOCKBACK)
         efeitos.append(chd.charAtk('fireball', atk_args))
-
+        self.atk_cooldown += self.atk_delay/2
         if self.FIRE_BALL_AMMOUNT > 1:
             for i in range(self.FIRE_BALL_AMMOUNT - 1):
                 atk_args = (self, self.hspeed + self.x + self.hit_box.width*0.2 + self.last_direction_moved*(self.hit_box.width + self.AtkRange),
@@ -266,6 +289,34 @@ class obj_jogador(object):
         self.y = self.start_y
         self.TIME_BLEEDING = 0
 
+    def getCollisions(self, tiles):
+        hits = []
+        for tile in tiles:
+            if self.hit_box.colliderect(tile.hit_box):
+                hits.append(tile)
+        return hits
+
+    def checkCollX(self, t):
+        c = self.getCollisions(t)
+        for tile in c:
+            if self.hspeed > 0:
+                self.hit_box.x = tile.hit_box.left - self.hit_box.w
+                self.hspeed = 0
+            elif self.hspeed < 0:
+                self.hit_box.x = tile.hit_box.right
+                self.hspeed = 0
+    def checkCollY(self, t):
+        c = self.getCollisions(t)
+        self.hit_box.bottom += 1
+        self.on_ground = False
+        for tile in c:
+            if self.vspeed > 0:
+                self.on_ground = True
+                self.vspeed = 0
+                self.hit_box.bottom = tile.hit_box.top
+            elif self.vspeed < 0:
+                self.vspeed = 0
+                self.hit_box.top = tile.hit_box.bottom
     def step(self): #função que executa o cógido geral do jogador
         if self.atk_cooldown >= 1:
             self.atk_cooldown-=1
@@ -281,6 +332,7 @@ class obj_jogador(object):
         if self.dash_cooldown > 0:
             self.dash_cooldown -= 1
         if self.Hp > 0:
+            '''
             #Verificando se ele está no chão (da tela)
             if self.y >= room_height - self.hit_box.height:
 
@@ -292,7 +344,7 @@ class obj_jogador(object):
             else:
                 self.on_ground = False
 
-
+            
     #Atualizando o x,y do jogador com base na velocidade e no lag ( dt )
 
             #Verificando se ele está colidindo || HORIZONTAL
@@ -302,24 +354,25 @@ class obj_jogador(object):
 
             #Passa por cada ponto (menos os da borda) da parte mais esquerda ou direita do retângulo
             collided_horizontally = False
-            for h_ in range(self.hit_box.height):
-                var_colisao = fs.collisionList(blocos.tiles, (side_ + self.hspeed*dt,self.hit_box.y + h_))
+            for h_ in range(self.hit_box.height+1):
+                if h_ % 14 == 0:
+                    var_colisao = fs.collisionList(blocos.tiles, (side_ + self.hspeed*dt,self.hit_box.y + h_))
 
-                if var_colisao[0] == True:
+                    if var_colisao[0] == True:
 
-                    collidee = var_colisao[1] #Colidido da collisionList || "collidee" é o colidido
+                        collidee = var_colisao[1] #Colidido da collisionList || "collidee" é o colidido
 
-                    #Aproximando ele do pixel mais próximo sem colidir
-                    i_ = 0
-                    while collidee.hit_box.collidepoint((side_ + i_,self.hit_box.y + h_)) == False:
-                        i_ += fs.sign(self.hspeed*dt)
-                    self.x += i_
+                        #Aproximando ele do pixel mais próximo sem colidir
+                        i_ = 0
+                        while collidee.hit_box.collidepoint((side_ + i_,self.hit_box.y + h_)) == False:
+                            i_ += fs.sign(self.hspeed*dt)
+                        self.x += i_
 
-                    self.hspeed = 0 #Vc colidiu, Vc perde sua velocidade
+                        self.hspeed = 0 #Vc colidiu, Vc perde sua velocidade
 
-                    #Exiting loop
-                    collided_horizontally = True
-                    break;
+                        #Exiting loop
+                        collided_horizontally = True
+                        break;
 
             if collided_horizontally == False:
                 if self.x + self.hspeed*dt >= 0 and self.x + self.hspeed*dt < room_width - self.hit_box.width:
@@ -339,25 +392,26 @@ class obj_jogador(object):
 
             #Passa por cada ponto (menos os da borda) da parte mais em baixo ou em cima do retângulo
             collided_vertically = False
-            for w_ in range(self.hit_box.width - 1):
-                var_colisao = fs.collisionList(blocos.tiles,(self.hit_box.x + w_ + 1,side_ + self.vspeed*dt))
+            for w_ in range(self.hit_box.width - 1+1):
+                if w_ % 14 == 0:
+                    var_colisao = fs.collisionList(blocos.tiles,(self.hit_box.x + w_ + 1,side_ + self.vspeed*dt))
 
-                if var_colisao[0] == True:
-                    collidee = var_colisao[1] #Colidido da collisionList || "collidee" é o colidido
+                    if var_colisao[0] == True:
+                        collidee = var_colisao[1] #Colidido da collisionList || "collidee" é o colidido
 
-                    #Aproximando ele do pixel mais próximo sem colidir
-                    i_ = 0
-                    while collidee.hit_box.collidepoint((self.hit_box.x + w_ + 1,side_ + i_)) == False:
-                        i_ += fs.sign(self.vspeed*dt)
-                    self.y += i_
+                        #Aproximando ele do pixel mais próximo sem colidir
+                        i_ = 0
+                        while collidee.hit_box.collidepoint((self.hit_box.x + w_ + 1,side_ + i_)) == False:
+                            i_ += fs.sign(self.vspeed*dt)
+                        self.y += i_
 
-                    if self.vspeed >= 0:
-                        self.on_ground = True #Está no chão
-                    self.vspeed = 0 #Vc colidiu, Vc perde sua velocidade
+                        if self.vspeed >= 0:
+                            self.on_ground = True #Está no chão
+                        self.vspeed = 0 #Vc colidiu, Vc perde sua velocidade
 
-                    #Exiting loop
-                    collided_vertically = True
-                    break;
+                        #Exiting loop
+                        collided_vertically = True
+                        break;
 
             if collided_vertically == False:
                 if self.y + self.vspeed*dt <= room_height - self.hit_box.height:
@@ -365,23 +419,26 @@ class obj_jogador(object):
 
                 else: #Ele ultrapassaria o chão da tela
                     self.y = room_height - self.hit_box.height
-
+            '''
 
             #Atualizando o x,y da hitbox do jogador
-            self.hit_box.x = self.x
-            self.hit_box.y = self.y
+
+            #self.hit_box.x = self.x
+            #self.hit_box.y = self.y
 
             #Atualizando a velocidade || HORIZONTAL
             self.hspeed = fs.friction(self.hspeed,self.fric)
             if abs(self.hspeed) > self.max_hspeed: self.hspeed = self.max_hspeed*fs.sign(self.hspeed) #max speed
 
             #Atualizando a velocidade || VERTICAL
-            if self.on_ground == False:
-                self.vspeed += self.grav
-            else:
-                #certificando que o obj não está acelerando em direção ao chão
-                if self.vspeed > 0: self.vspeed = 0
+            self.vspeed += self.grav
 
+            self.hit_box.x += self.hspeed*dt
+            self.checkCollX(blocos.tiles)
+            self.hit_box.y += self.vspeed*dt
+            self.checkCollY(blocos.tiles)
+            self.x = self.hit_box.x
+            self.y = self.hit_box.y
             #vetores muahaha
             self.speed = (self.hspeed**2 + self.vspeed**2 )**(1/2)
             self.direction = 360*(1/(2*math.pi))*(self.speed)
@@ -403,7 +460,7 @@ class obj_jogador(object):
             vez = [self.player_,self.enemy.player_]
             jogador1.restart()
             jogador2.restart()
-            spawn_cards()
+            #spawn_cards()
 
     def draw(self): #função que desenha o jogador na tela
         if self.Hp > 0:
@@ -425,8 +482,10 @@ class obj_jogador(object):
                     if self.on_ground:
                         if abs(self.hspeed) > 0:
                             self.current_spr = self.anim.play('run')
-                        else:
+                        elif not self.isCrouch:
                             self.current_spr = self.anim.play('idle')
+                        else:
+                            self.current_spr = self.anim.play('Crouch')
                     else:
                         self.current_spr = self.anim.play('jump')
                     
@@ -770,7 +829,7 @@ efeitos = []
 efeitos_deposito = []
 cartas = []
 cartas_deposito = []
-spawn_cards() #COMENTE E DESCOMENTE PARA SPAWNAR AS CARTAS
+#spawn_cards() #COMENTE E DESCOMENTE PARA SPAWNAR AS CARTAS
 card_selected = 0
 vez = [0,1] #lista que armazena a ordem de escolha de cartas
 points = [0,0]
@@ -778,8 +837,8 @@ Round = 0
 
 #CRIANDO OS JOGADORES
 
-jogador1 = obj_jogador('wherewolf',100,0,0)
-jogador2 = obj_jogador('homi',room_width - 100,0,1)
+jogador1 = obj_jogador('wherewolf',250,60,0)
+jogador2 = obj_jogador('homi',room_width - 250,60,1)
 playerList = [jogador1, jogador2]
 jogador1.enemy = jogador2
 jogador2.enemy = jogador1
@@ -799,7 +858,7 @@ while RODANDO: #game loop
     #last_time = time.time()
 
     window.fill((25, 25, 25)) #fundo da tela fica cinza escuro
-    #blocos.draw_map(window, rel_width/2, rel_height/2)
+    window.blit(*(blocos.draw_map_mesh(window, rel_width/2, rel_height/2)))
     #draw_text(str(int(200*dt_)/200),rel_width/2 + room_width/2,rel_height/2 + 230,color_ = (255,0,0))
 
     #pg.display.set_caption("{}".format(clock.get_fps())) #mostra o fps no título da tela
