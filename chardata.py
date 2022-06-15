@@ -52,7 +52,7 @@ def fireball(player, x, y, di, atime, dmg, knk, s = 2):
 	return pj.Projection(anim, x, y, di, player, hfx, pfx, atime, False, s)
 
 def spikes(player, x, y, di, atime, dmg, knk, s = 2):
-	anim = an.Animator(['spikes'], [3/0.8], 'spikes', 'fx_')
+	anim = an.Animator(['spikes'], [12], 'spikes', 'fx_')
 	hfx = {
 	'damage': [dmg, knk]
 	}

@@ -81,7 +81,7 @@ class obj_jogador(object):
         #Caracteristicas do obj definidas na criação
         self.char = char
         self.player_ = player_
-        self.sc = 2.5
+        self.sc = 1.75
 
         moves = ['idle', 'run', 'jump', 'tkdmg', 'atk', 'D_atk', 'A_atk', 'Crouch']
         frameRates = [8, 12, 16, 16, 32, 20, 32, 8]
@@ -579,7 +579,7 @@ class carta(object):
         self.width = 320
         self.height = 460
         self.card_sprite = pg.Rect(self.x,self.y,self.width,self.height)
-        self.sprite = spr_bloco
+        self.sprite = pg.image.load(ctxt.CARDS_IMAGES.get(tipo_)).convert_alpha()
         self.tipo_ = tipo_
         self.txt = ctxt.CARDS_DESCRIPTIONS.get(tipo_)
 

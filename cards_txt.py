@@ -1,3 +1,5 @@
+import pygame as pg
+
 CARDS_NOTSTACKABLE = []
 
 #FIREBALL
@@ -53,4 +55,17 @@ CARDS_DESCRIPTIONS = {
     'SURVIVAL': "Ataque aumenta em {0}% se você estiver com vida baixa".format(round(100*(SURVIVAL_ATK_MULTPLIER - 1))),
     'SPIKES': "Espinhos surgem no local aonde você pulou",
     'NO_SEE': "Você fica invisível enquanto não leva dano"
+}
+CARDS_IMAGES = {
+    None: "Carta Legal.",
+    'FIREBALL': 'Graphics/cards/fireball.png',
+    'ENHANCED_SPEED': 'Graphics/cards/speed.png',
+    'BLEEDING': 'Graphics/cards/bleeding.png',
+    'ATK_WHILE_DASHING': 'Graphics/cards/dashatk.png',
+    'ATKESQUIVA': 'Graphics/cards/powerdash.png',
+    'APLIES_MORE_KNOCKBACK': 'Graphics/cards/knock.png',
+    'RECEIVES_LESS_KNOCKBACK': 'Graphics/cards/knockresi.png',
+    'SURVIVAL': 'Graphics/cards/survival.png',
+    'SPIKES': 'Graphics/cards/spikes.png',
+    'NO_SEE': 'Graphics/cards/nosee.png',
 }
