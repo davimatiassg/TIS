@@ -138,8 +138,8 @@ class obj_jogador(object):
 
     def getPlayerInput(self, klist, alist):
         #marcadores de h i t b o x.
-        window.blit(spr_cursor, (self.hit_box.x + camera.x, self.hit_box.y + camera.y))
-        window.blit(spr_cursor, (self.hit_box.x + self.hit_box.width + camera.x, self.hit_box.y + self.hit_box.height+ camera.y))
+        #window.blit(spr_cursor, (self.hit_box.x + camera.x, self.hit_box.y + camera.y))
+        #window.blit(spr_cursor, (self.hit_box.x + self.hit_box.width + camera.x, self.hit_box.y + self.hit_box.height+ camera.y))
         #marcadores de h i t b o x.
         
         if self.unabletime <= 0:
@@ -227,7 +227,7 @@ class obj_jogador(object):
         #atk_args = (self, self.hspeed + self.x + self.hit_box.width*0.2 + self.last_direction_moved*(self.hit_box.width + self.AtkRange),
         #    self.y + self.hit_box.height/5, (90 -(90*self.last_direction_moved)), 0.15, (self.Atk + atk_increase_)*atk_mult, self.knockback*self.APLIES_MORE_KNOCKBACK)
 
-        atk_args = (self, self.x + self.hit_box.width/2 , self.y - self.hit_box.height*0.5, 90, 0.15, (self.Atk + atk_increase_)*atk_mult, self.knockback*self.APLIES_MORE_KNOCKBACK, 7)
+        atk_args = (self, self.x + self.hit_box.width/2 , self.y - self.hit_box.height*0.5, 90, 0.15, (self.Atk + atk_increase_)*atk_mult, self.knockback*self.APLIES_MORE_KNOCKBACK, 2)
 
         efeitos.append(chd.charAtk(self.char, atk_args))
 
@@ -248,7 +248,7 @@ class obj_jogador(object):
                 #atk_args = (self, self.hspeed + self.x + self.hit_box.width*0.2 + self.last_direction_moved*(self.hit_box.width + self.AtkRange),
                 #    self.y + self.hit_box.height/5, (90 -(90*self.last_direction_moved)), 0.15, (self.Atk + atk_increase_)*atk_mult, self.knockback*self.APLIES_MORE_KNOCKBACK)
 
-                atk_args = (self, self.x + self.hit_box.width/2, self.y + self.hit_box.height*1.1, 270, 0.15, (self.Atk + atk_increase_)*atk_mult, self.knockback*self.APLIES_MORE_KNOCKBACK, 4)
+                atk_args = (self, self.x + self.hit_box.width/2, self.y + self.hit_box.height*1.1, 270, 0.15, (self.Atk + atk_increase_)*atk_mult, self.knockback*self.APLIES_MORE_KNOCKBACK, 2)
 
                 efeitos.append(chd.charAtk(self.char, atk_args))
 
@@ -300,7 +300,7 @@ class obj_jogador(object):
     def checkCollX(self, t):
         c = self.getCollisions(t)
         for tile in c:
-            if self.hspeed > 0:
+            if self.hspeed >= 0 :
                 self.hit_box.x = tile.hit_box.left - self.hit_box.w
                 self.hspeed = 0
             elif self.hspeed < 0:
@@ -838,9 +838,11 @@ points = [0,0]
 Round = 0
 
 #CRIANDO OS JOGADORES
-
-jogador1 = obj_jogador('wug',250,450,0, [8, 12, 16, 16, 48, 48, 48, 8], [54, 128])
-jogador2 = obj_jogador('homi',room_width - 250,450,1)
+#wug args [8, 12, 16, 16, 48, 48, 48, 8], [54, 128]
+#homi args [8, 12, 16, 16, 32, 20, 32, 8], [0, 15]
+jogador1 = obj_jogador('wug',250,450,0, [8, 12, 16, 16, 28, 48, 48, 8], [54, 128])
+jogador1.atk_delay = 24
+jogador2 = obj_jogador('wherewolf',room_width - 250,450,1)
 playerList = [jogador1, jogador2]
 jogador1.enemy = jogador2
 jogador2.enemy = jogador1
@@ -947,8 +949,8 @@ while RODANDO: #game loop
                 window.blit(tup[0], (tup[1] + camera.x, tup[2] + camera.y))
                 
                 #marcadores de h i t b o x.
-                window.blit(spr_cursor, (tup[1] + camera.x, tup[2] + camera.y))
-                window.blit(spr_cursor, (tup[1] + camera.x + tup[0].get_width(), tup[2] + tup[0].get_height() + camera.y))
+                #window.blit(spr_cursor, (tup[1] + camera.x, tup[2] + camera.y))
+                #window.blit(spr_cursor, (tup[1] + camera.x + tup[0].get_width(), tup[2] + tup[0].get_height() + camera.y))
                 #marcadores de h i t b o x.
                 
             else:

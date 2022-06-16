@@ -60,9 +60,9 @@ def missile(player, x, y, di, atime, dmg, knk, s = 2):
 	'explode': [23]
 	}
 	pfx = {
-	'move':[[ctxt.FIREBALL_SPEED*math.cos((2*math.pi)*di/360), ctxt.FIREBALL_SPEED*-2*math.sin((2*math.pi)*di/360)]]
+	'move':[[ctxt.FIREBALL_SPEED*math.cos((2*math.pi)*di/360), ctxt.FIREBALL_SPEED*-1*math.sin((2*math.pi)*di/360)]]
 	}
-	return pj.Projection(anim, x, y, di, player, hfx, pfx, 3, False, 2)
+	return pj.Projection(anim, x, y, di, player, hfx, pfx, 1, False, s)
 
 def spikes(player, x, y, di, atime, dmg, knk, s = 2):
 	anim = an.Animator(['spikes'], [12], 'spikes', 'fx_')
