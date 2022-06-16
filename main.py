@@ -77,18 +77,19 @@ snd_sound = pg.mixer.Sound("z4.wav")
 
 #OBJETOS / CLASSES / FUNÇÕES
 class obj_jogador(object):
-    def __init__(self, char, x, y, player_):
+    def __init__(self, char, x, y, player_, frates = [8, 12, 16, 16, 32, 20, 32, 8], offset = [0, 0]):
         #Caracteristicas do obj definidas na criação
         self.char = char
         self.player_ = player_
         self.sc = 1.75
+        self.offset = offset
 
         moves = ['idle', 'run', 'jump', 'tkdmg', 'atk', 'D_atk', 'A_atk', 'Crouch']
-        frameRates = [8, 12, 16, 16, 32, 20, 32, 8]
-        self.anim = an.Animator(moves, frameRates, char, 'char_')
+        #Framerate[8,     12,     16,     16,     32,     20,       32,      8]
+        self.anim = an.Animator(moves, frates, char, 'char_')
         self.current_spr = self.anim.play('idle')
 
-        self.hit_box = pg.Rect(x,y,self.current_spr.get_height()*self.sc, self.current_spr.get_width()*self.sc)
+        self.hit_box = pg.Rect(x,y,55*self.sc, 55*self.sc)
         self.x = x
         self.y = y
         self.start_x = x
@@ -499,7 +500,7 @@ class obj_jogador(object):
 
             #Being Invisible
             if self.TIME_NO_SEE > 0:
-                window.blit(sprite_virado, (self.x + camera.x, self.y + camera.y))
+                window.blit(sprite_virado, (self.x + camera.x-self.offset[0], self.y + camera.y-self.offset[1]))
                 if self.NO_SEE == True: self.TIME_NO_SEE -= 1
             else:
                 self.TIME_NO_SEE = 0
@@ -838,7 +839,7 @@ Round = 0
 
 #CRIANDO OS JOGADORES
 
-jogador1 = obj_jogador('wherewolf',250,450,0)
+jogador1 = obj_jogador('wug',250,450,0, [8, 12, 16, 16, 48, 48, 48, 8], [54, 128])
 jogador2 = obj_jogador('homi',room_width - 250,450,1)
 playerList = [jogador1, jogador2]
 jogador1.enemy = jogador2

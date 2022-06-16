@@ -11,6 +11,7 @@ char_atk = {
 	'wherewolf':'claws',
 	'homi':'homiatk',
 	'fireball':'fireball',
+	'wug':'missile',
 	'spikes': 'spikes'
 }
 
@@ -50,6 +51,18 @@ def fireball(player, x, y, di, atime, dmg, knk, s = 2):
 	'move':[[ctxt.FIREBALL_SPEED*math.cos((2*math.pi)*di/360), ctxt.FIREBALL_SPEED*math.sin((2*math.pi)*di/360)]]
 	}
 	return pj.Projection(anim, x, y, di, player, hfx, pfx, atime, False, s)
+
+def missile(player, x, y, di, atime, dmg, knk, s = 2):
+	anim = an.Animator(['missile','explode'], [12,35], 'missile', 'fx_')
+	hfx = {
+	'damage': [dmg, knk],
+	'block_contact': [],
+	'explode': [23]
+	}
+	pfx = {
+	'move':[[ctxt.FIREBALL_SPEED*math.cos((2*math.pi)*di/360), ctxt.FIREBALL_SPEED*-2*math.sin((2*math.pi)*di/360)]]
+	}
+	return pj.Projection(anim, x, y, di, player, hfx, pfx, 3, False, 2)
 
 def spikes(player, x, y, di, atime, dmg, knk, s = 2):
 	anim = an.Animator(['spikes'], [12], 'spikes', 'fx_')
