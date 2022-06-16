@@ -54,7 +54,8 @@ CARDS_DESCRIPTIONS = {
     'RECEIVES_LESS_KNOCKBACK': "Recebe menos Knockback",
     'SURVIVAL': "Ataque aumenta em {0}% se você estiver com vida baixa".format(round(100*(SURVIVAL_ATK_MULTPLIER - 1))),
     'SPIKES': "Espinhos surgem no local aonde você pulou",
-    'NO_SEE': "Você fica invisível enquanto não leva dano"
+    'NO_SEE': "Você fica invisível enquanto não leva dano",
+    'DJUMP':  "Você pode pular mais uma vez no ar, mas seu pulo fica mais fraco."
 }
 CARDS_IMAGES = {
     None: "Carta Legal.",
@@ -68,4 +69,5 @@ CARDS_IMAGES = {
     'SURVIVAL': 'Graphics/cards/survival.png',
     'SPIKES': 'Graphics/cards/spikes.png',
     'NO_SEE': 'Graphics/cards/nosee.png',
+    'DJUMP': 'Graphics/cards/doublejump.png'
 }

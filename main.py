@@ -109,6 +109,9 @@ class obj_jogador(object):
         self.max_vspeed = 5 #velocidade vertical máxima (em módulo)
         self.hacel = 0.14 #aceleração horizontal
         self.jump = 1.6 #aceleração vertical, ou seja, pulo
+        self.jumpstack = 1
+        self.jstacksleft = 1
+        self.jpress = False
         self.fric = 0.1 #fricção
         self.grav = 0.075 #gravidade
         self.on_ground = False #boolean: está no chão?
@@ -138,33 +141,35 @@ class obj_jogador(object):
 
     def getPlayerInput(self, klist, alist):
         #marcadores de h i t b o x.
-        #window.blit(spr_cursor, (self.hit_box.x + camera.x, self.hit_box.y + camera.y))
-        #window.blit(spr_cursor, (self.hit_box.x + self.hit_box.width + camera.x, self.hit_box.y + self.hit_box.height+ camera.y))
+        window.blit(spr_cursor, (self.hit_box.x + camera.x, self.hit_box.y + camera.y))
+        window.blit(spr_cursor, (self.hit_box.x + self.hit_box.width + camera.x, self.hit_box.y + self.hit_box.height+ camera.y))
         #marcadores de h i t b o x.
         
         if self.unabletime <= 0:
-            for j in range(len(klist)): #movimentando o personagem com base no input
+            self.isCrouch = klist[3]
+            for j in range(len(klist)-1): #movimentando o personagem com base no input
             #k = 0 é A
             #k = 1 é D
             #k = 2 é W
             #k = 3 é S
-                if j == 3:
-                    self.isCrouch = klist[j]
                 if klist[j]:
                     if j == 0 and self.hspeed > -self.lower_max_hspeed:
                         self.hspeed -= self.hacel
                         self.last_direction_moved = -1
                     if j == 1 and self.hspeed < self.lower_max_hspeed:
                         self.hspeed += self.hacel
-                        self.last_direction_moved = +1                        
-                    if self.on_ground == True:
-                        if j == 2:
-                            self.vspeed -= self.jump
+                        self.last_direction_moved = +1
+                    if j == 2:                          
+                        if (self.jstacksleft > 0 and self.jpress == False) or self.on_ground:
+                            print('pulou = {}'.format(self.jstacksleft))
+                            self.jpress = True
+                            self.jstacksleft -= 1
+
+                            self.vspeed -= self.jump +self.vspeed*3/4
                             if self.SPIKES:
                                 self.CARDspikes()
-                        
-
-            
+                elif j == 2:
+                    self.jpress = False
             for i in range(len(alist)):
                 if alist[i]:
                     if i == 0 and self.dash_cooldown <= 0:
@@ -269,6 +274,7 @@ class obj_jogador(object):
     def CARDspikes(self):
         #SPIKES
         y_ = self.y
+        '''
         while True:
             y_ += 5
             collides = fs.collisionList(blocos.tiles,(self.x + self.hit_box.height/2 ,y_))
@@ -279,7 +285,7 @@ class obj_jogador(object):
             y_ = collides[1].y - 64
         else:
             y_ = room_height - 64
-
+'''
         atk_args = (self,self.x + self.hit_box.width/2,
             y_, 0, ctxt.SPIKES_ATIME/60, ctxt.SPIKES_DAMAGE, 1.3)
         efeitos.append(chd.charAtk('spikes', atk_args))
@@ -300,7 +306,7 @@ class obj_jogador(object):
     def checkCollX(self, t):
         c = self.getCollisions(t)
         for tile in c:
-            if self.hspeed >= 0 :
+            if self.hspeed > 0 :
                 self.hit_box.x = tile.hit_box.left - self.hit_box.w
                 self.hspeed = 0
             elif self.hspeed < 0:
@@ -315,9 +321,12 @@ class obj_jogador(object):
                 self.on_ground = True
                 self.vspeed = 0
                 self.hit_box.bottom = tile.hit_box.top
+                self.jstacksleft = self.jumpstack
             elif self.vspeed < 0:
                 self.vspeed = 0
                 self.hit_box.top = tile.hit_box.bottom
+
+
     def step(self): #função que executa o cógido geral do jogador
         if self.atk_cooldown >= 1:
             self.atk_cooldown-=1
@@ -334,6 +343,16 @@ class obj_jogador(object):
             self.dash_cooldown -= 1
         if self.Hp > 0:
             '''
+            if self.isCrouch and abs(self.hspeed) == 0:            
+                self.hit_box.height = 55 * self.sc/2
+                print('issai')
+                self.hit_box.y = self.y +  55 * self.sc/2
+            else:
+
+                self.hit_box.height * self.sc
+                self.hit_box.y = self.y
+
+            
             #Verificando se ele está no chão (da tela)
             if self.y >= room_height - self.hit_box.height:
 
@@ -435,11 +454,11 @@ class obj_jogador(object):
             self.vspeed += self.grav
 
             self.hit_box.x += self.hspeed*dt
+            self.x = self.hit_box.x
             self.checkCollX(blocos.tiles)
             self.hit_box.y += self.vspeed*dt
-            self.checkCollY(blocos.tiles)
-            self.x = self.hit_box.x
             self.y = self.hit_box.y
+            self.checkCollY(blocos.tiles)
             #vetores muahaha
             self.speed = (self.hspeed**2 + self.vspeed**2 )**(1/2)
             self.direction = 360*(1/(2*math.pi))*(self.speed)
@@ -790,6 +809,11 @@ def apply_card_effect(player_,card_):
         player_.SPIKES = True
     if card_.tipo_ == "NO_SEE":
         player_.NO_SEE = True
+    if card_.tipo_ == "DJUMP":
+        player_.jumpstack +=1
+        player_.jstacksleft = player_.jumpstack
+        player_.jump -= (player_.jump-1)*0.15
+        print('pegou = {}'.format(player_.jumpstack))
 
     return 0
 
@@ -875,11 +899,11 @@ while RODANDO: #game loop
     draw_text(str(int(clock.get_fps()*100)/100),rel_width/2 + room_width/2,rel_height/2 + 190,color_ = (255,0,0),font_ = fnt_comicsans[1])
 
     #---CODIGO DO JOGADOR
-
+    jogador1.getPlayerInput(key, act)                   #Função para realizar o controle do jogador 1 com base nas inputs do teclado
     jogador1.step()                                     #Função de cógido geral "step" do jogador1
-    jogador1.getPlayerInput(key, act)         #Função para realizar o controle do jogador 1 com base nas inputs do teclado
     jogador1.draw()                                     #Função de desenhar do jogador1
-    jogador2.getPlayerInput(key2, act2)       #Função para realizar o controle do jogador 2 com base nas inputs do teclado
+
+    jogador2.getPlayerInput(key2, act2)                 #Função para realizar o controle do jogador 2 com base nas inputs do teclado
     jogador2.step()                                     #Função de cógido geral "step" do jogador2
     jogador2.draw()                                     #Função de desenhar do jogador2
 
