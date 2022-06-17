@@ -25,10 +25,11 @@ ATKESQUIVA_INCREASE = 2
 CARDS_NOTSTACKABLE.append('ATK_WHILE_DASHING') #NOT STACKABLE !!!!!!!!!!
 
 #Dá mais knockback
-APLIES_MORE_KNOCKBACK = 1.4
+APLIES_MORE_KNOCKBACK = 1.75
 
 #Recebe menos knockback
 RECEIVES_LESS_KNOCKBACK = 1.5
+RECEIVES_LESS_DAMAGE = 0.1
 
 #SURVIVAL (x% de vida -> ataque ++)
 SURVIVAL_MIN_HP = 0.2
@@ -50,9 +51,9 @@ CARDS_DESCRIPTIONS = {
     'BLEEDING': "Ataques fazem inimigos sangrarem por {} segundos.".format(round(BLEEDING_TIME/60)),
     'ATK_WHILE_DASHING': "Você pode atacar enquanto usa a esquiva.",
     'ATKESQUIVA': "Aumenta o dano do primeiro ataque depois de usar uma esquiva, mas sua esquiva não te deixa invulnerável.",
-    'APLIES_MORE_KNOCKBACK': "Ataques aplicam mais repulsão.",
-    'RECEIVES_LESS_KNOCKBACK': "Recebe menos repulsão.",
-    'SURVIVAL': "Ataque aumenta em {} % se você estiver com vida baixa.".format(round(100*(SURVIVAL_ATK_MULTPLIER - 1))),
+    'APLIES_MORE_KNOCKBACK': "Ataques aplicam {}% a mais repulsão.".format(round(100*(APLIES_MORE_KNOCKBACK - 1))),
+    'RECEIVES_LESS_KNOCKBACK': "Recebe {}% a menos repulsão e {}% a menos de dano.".format(round(100*(RECEIVES_LESS_KNOCKBACK-1)), round(100*RECEIVES_LESS_DAMAGE)),
+    'SURVIVAL': "Ataque aumenta em {}% se você estiver com vida baixa.".format(round(100*(SURVIVAL_ATK_MULTPLIER - 1))),
     'SPIKES': "Espinhos surgem no local aonde você pulou.",
     'NO_SEE': "Você fica invisível enquanto não levar dano.",
     'DJUMP':  "Ganha um pulo extra mas seu pulo fica mais fraco."

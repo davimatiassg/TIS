@@ -49,7 +49,8 @@ BLACK = (0  ,0  ,0  )
 RED = (255  ,0  ,0  )
 GREEN = (0  ,255  ,0  )
 BLUE = (0  ,0  ,255  )
-line_text_size = "abcdefghijklmnopqrstu"
+BRIGHT_YELLOW = (250, 250, 135)
+line_text_size = "abcdefghijklmnopqrs"
 VOLUME_DO_JOGO = 1 # 0 a 1
 
 LISTA_DE_CARTAS = []
@@ -127,6 +128,7 @@ class obj_jogador(object):
         self.atk_delay = 16 # tempo inicial para o próximo ataque, em frames (meio segundo a 64 fps).
         self.knockback = 1.25 #knockback aplicado ao inimigo
         self.knockresi = 1 #resistência ao knockback: 1 = nenhuma resitência; 2 = 50% resistência; 3 = 66% de resistência e assim por diante.
+        self.dmgres = 1
         self.enemy = self #Plottwistico
         self.isAtacking = False  #está atacando?
         self.isCrouch = False #está agachado?
@@ -196,7 +198,7 @@ class obj_jogador(object):
         if self.invtime <= 0 or self.ATKESQUIVA:
             self.hspeed += knk[0]/self.knockresi
             self.vspeed += knk[1]/self.knockresi
-            self.Hp -= d
+            self.Hp -= d*self.dmgres
             self.unabletime = int( ( (knk[0]**2 + knk[1]**2)**(1/2) )*10/self.knockresi)
             self.invtime = self.unabletime * 5/3
             if self.NO_SEE == True:
@@ -599,11 +601,15 @@ class carta(object):
     def __init__(self,x,y,tipo_,id_):
         #Caracteristicas do obj definidas na criação
         self.x = x
+        self.x_ = x
         self.y = y
+        self.y_ = y
         self.id_ = id_
         self.width = 320
         self.height = 460
-        self.card_sprite = pg.Rect(self.x,self.y,self.width,self.height)
+        #pg.Rect(self.x,self.y,self.width,self.height)
+        self.card_sprite = pg.transform.scale(pg.image.load('Graphics/cards/card.png').convert_alpha(), (320, 460))
+        self.current_card = self.card_sprite
         self.sprite = pg.image.load(ctxt.CARDS_IMAGES.get(tipo_)).convert_alpha()
         self.tipo_ = tipo_
         self.txt = ctxt.CARDS_DESCRIPTIONS.get(tipo_)
@@ -614,31 +620,28 @@ class carta(object):
         #Ajeitando o texto
 
     def draw(self): #função que desenha o obj na tela
-
+        sc_ = (1 + (self.sc - 1)*(card_selected == self.id_))
         #Desenhando o fundo da carta
-        self.card_sprite.width = self.width*(1 + (self.sc - 1)*(card_selected == self.id_))
-        self.card_sprite.height = self.height*(1 + (self.sc - 1)*(card_selected == self.id_))
-        self.card_sprite.x = self.x - self.width*(self.sc - 1)*(card_selected == self.id_)/2
-        self.card_sprite.y = self.y - self.height*(self.sc - 1)*(card_selected == self.id_)/2
-        pg.draw.rect(window , WHITE ,self.card_sprite)
+        self.current_card = pg.transform.scale(self.card_sprite, (320*sc_, 460*sc_))
+        self.x = self.x_ - sc_/2
+        self.y = self.y_ - sc_/2
+        window.blit(self.current_card, (self.x, self.y))
 
         #Desenhando a imagem da carta
         if self.sprite != None:
 
             #Modifica as dimensões do sprite
-            sprite_sc = pg.transform.scale(self.sprite,
-            (int(self.sprite.get_width()*self.card_sprite.width/self.width),
-            int(self.sprite.get_height()*self.card_sprite.height/self.height)))
+            sprite_sc = pg.transform.scale(self.sprite, (self.sprite.get_width()*sc_*1.5, self.sprite.get_height()*sc_*1.5))
 
-            window.blit(sprite_sc, (self.card_sprite.x + self.card_sprite.width/2 - sprite_sc.get_width()/2,
-            self.card_sprite.y + self.card_sprite.height/3.2 - sprite_sc.get_height()/2))
+            window.blit(sprite_sc, (self.x + sc_*self.card_sprite.get_width()/2 - sprite_sc.get_width()/2,
+            self.y + sc_*self.card_sprite.get_height()/3.2 - sprite_sc.get_height()/2))
 
         #Desenhando a descrição da carta
-        fnt_sc = int((self.card_sprite.width/self.width) + (2 - self.sc)) - 1
+        fnt_sc = int((self.card_sprite.get_width()/self.width) + (2 - self.sc)) - 1
 
-        draw_text(self.txt,self.card_sprite.x + self.card_sprite.width/2,
-        self.card_sprite.y + self.card_sprite.height/2 + 70,
-        color_ = BLACK,font_ = fnt_comicsans[fnt_sc])
+        draw_text(self.txt,self.x + sc_*self.card_sprite.get_width()/2,
+        self.y + sc_*self.card_sprite.get_height()*3/5,
+        color_ = BRIGHT_YELLOW, font_ = fnt_comicsans[fnt_sc], centered_ = True, sc_ = sc_)
 
 class effect(object):
     def __init__(self,spr,x,y,alive_time,
@@ -672,7 +675,7 @@ class effect(object):
         else:
             window.blit(self.sprite, (self.x + camera.x, self.y + camera.y))
 
-def draw_text(txt_,x_,y_,font_ = fnt_comicsans[4],color_ = WHITE,centered_ = True):
+def draw_text(txt_,x_,y_,font_ = fnt_comicsans[4],color_ = WHITE,centered_ = True, sc_ = 1):
     #if "\n" in txt_:
 
         #IT HAS LINE BREAKS; (╯°□°)╯︵ ┻━┻
@@ -682,7 +685,7 @@ def draw_text(txt_,x_,y_,font_ = fnt_comicsans[4],color_ = WHITE,centered_ = Tru
         i = 0 #n line
         str_ = "" #current string with no line breaks
         f_str_ = []
-        print('startloop')
+        #print('startloop')
         g = 0
         while i-g <= t_:
             '''
@@ -701,17 +704,19 @@ def draw_text(txt_,x_,y_,font_ = fnt_comicsans[4],color_ = WHITE,centered_ = Tru
                 str_ = ' '.join(s)
                 #print(str_)
                 if str_ != '':
-                    f_str_.append(font_.render(str_, False, color_))
+                    f = font_.render(str_, False, color_)
+                    f_str_.append(pg.transform.scale(f, (f.get_width()*sc_, f.get_height()*sc_)))
                 str_ = ''   
             else:
                 m = txt_[i-g]
                 str_ += m
                 #print("added '{}', string total = ".format(m) + str_)     
             i+=1
-        f_str_.append(font_.render(str_, False, color_))
+        f = font_.render(str_, False, color_)
+        f_str_.append(pg.transform.scale(f, (f.get_width()*sc_, f.get_height()*sc_)))
         #print("string final= " + str_)
         for j in range(len(f_str_)):
-            window.blit(f_str_[j],(x_ - f_str_[j].get_width()/2, y_ - f_str_[j].get_height()/2 + fnt_comicsans_Vspace[fnt_comicsans.index(font_)]*(j) ))
+            window.blit(f_str_[j],(x_ - f_str_[j].get_width()/2, y_ - f_str_[j].get_height()/2 + fnt_comicsans_Vspace[fnt_comicsans.index(font_)]*(j)*sc_ ))
         '''
         for j in range(len(f_str_)-1):
             window.blit(f_str_[j],(x_,y_ + fnt_comicsans_Vspace[fnt_comicsans.index(font_)]*j))
@@ -837,6 +842,7 @@ def apply_card_effect(player_,card_):
         player_.APLIES_MORE_KNOCKBACK *= ctxt.APLIES_MORE_KNOCKBACK
     if card_.tipo_ == "RECEIVES_LESS_KNOCKBACK":
         player_.knockresi *= ctxt.RECEIVES_LESS_KNOCKBACK
+        player_.dmgres *= 1-ctxt.RECEIVES_LESS_DAMAGE
     if card_.tipo_ == "SURVIVAL":
         player_.SURVIVAL_ATK_MULTPLIER *= ctxt.SURVIVAL_ATK_MULTPLIER
     if card_.tipo_ == "SPIKES":
