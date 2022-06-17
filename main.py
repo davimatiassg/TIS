@@ -5,7 +5,7 @@ import fs
 import math
 import animation as an
 import random
-import chardata as chd
+import effectdata as fxd
 import projection as pj
 import cards_txt as ctxt
 import time
@@ -49,7 +49,7 @@ BLACK = (0  ,0  ,0  )
 RED = (255  ,0  ,0  )
 GREEN = (0  ,255  ,0  )
 BLUE = (0  ,0  ,255  )
-txt_de_22c = "abcdefghijklmnopqrstuv"
+line_text_size = "abcdefghijklmnopqrstu"
 VOLUME_DO_JOGO = 1 # 0 a 1
 
 LISTA_DE_CARTAS = []
@@ -115,6 +115,7 @@ class obj_jogador(object):
         self.fric = 0.1 #fricção
         self.grav = 0.075 #gravidade
         self.on_ground = False #boolean: está no chão?
+        self.was_on_ground = False #boolean: estava  no chão frame passado?
         self.unabletime = 0 #tempo de atordoamento/imobilização restante
         self.invtime = 0 #tempo de invulnerabilidade restante
         self.sprite_index = 0 #index atual do sprite
@@ -159,12 +160,12 @@ class obj_jogador(object):
                     if j == 1 and self.hspeed < self.lower_max_hspeed:
                         self.hspeed += self.hacel
                         self.last_direction_moved = +1
-                    if j == 2:                          
+                    if j == 2:
                         if (self.jstacksleft > 0 and self.jpress == False) or self.on_ground:
-                            print('pulou = {}'.format(self.jstacksleft))
+                            if(self.on_ground):
+                                self.jstacksleft += 1
                             self.jpress = True
                             self.jstacksleft -= 1
-
                             self.vspeed -= self.jump +self.vspeed*3/4
                             if self.SPIKES:
                                 self.CARDspikes()
@@ -216,7 +217,7 @@ class obj_jogador(object):
         atk_args = (self,self.hit_box.x + self.hit_box.width/2 + self.last_direction_moved*self.AtkRange*15,
             self.y +self.hit_box.height/4, (90 -(90*self.last_direction_moved)), 0.15, (self.Atk + atk_increase_)*atk_mult, self.knockback*self.APLIES_MORE_KNOCKBACK)
 
-        efeitos.append(chd.charAtk(self.char, atk_args))
+        efeitos.append(fxd.fxSpawn(self.char, atk_args))
 
         self.FIRST_ATK_AFTER_DASH = False
         
@@ -234,7 +235,7 @@ class obj_jogador(object):
 
         atk_args = (self, self.x + self.hit_box.width/2 , self.y - self.hit_box.height*0.5, 90, 0.15, (self.Atk + atk_increase_)*atk_mult, self.knockback*self.APLIES_MORE_KNOCKBACK, 2)
 
-        efeitos.append(chd.charAtk(self.char, atk_args))
+        efeitos.append(fxd.fxSpawn(self.char, atk_args))
 
         self.FIRST_ATK_AFTER_DASH = False
 
@@ -255,7 +256,7 @@ class obj_jogador(object):
 
                 atk_args = (self, self.x + self.hit_box.width/2, self.y + self.hit_box.height*1.1, 270, 0.15, (self.Atk + atk_increase_)*atk_mult, self.knockback*self.APLIES_MORE_KNOCKBACK, 2)
 
-                efeitos.append(chd.charAtk(self.char, atk_args))
+                efeitos.append(fxd.fxSpawn(self.char, atk_args))
 
                 self.FIRST_ATK_AFTER_DASH = False
 
@@ -263,13 +264,13 @@ class obj_jogador(object):
         #FireBall Attack
         atk_args = (self, self.hspeed + self.x + self.hit_box.width*0.2 + self.last_direction_moved*(self.hit_box.width + self.AtkRange),
             self.y + self.hit_box.height/5, (90 -(90*self.last_direction_moved)), ctxt.FIREBALL_ATIME, ctxt.FIREBALL_ATK, ctxt.FIREBALL_KNOCKBACK)
-        efeitos.append(chd.charAtk('fireball', atk_args))
+        efeitos.append(fxd.fxSpawn('fireball', atk_args))
         self.atk_cooldown += self.atk_delay/2
         if self.FIRE_BALL_AMMOUNT > 1:
             for i in range(self.FIRE_BALL_AMMOUNT - 1):
                 atk_args = (self, self.hspeed + self.x + self.hit_box.width*0.2 + self.last_direction_moved*(self.hit_box.width + self.AtkRange),
                     self.y + self.hit_box.height/5, random.randint(0,359), ctxt.FIREBALL_ATIME, ctxt.FIREBALL_ATK, ctxt.FIREBALL_KNOCKBACK)
-                efeitos.append(chd.charAtk('fireball', atk_args))
+                efeitos.append(fxd.fxSpawn('fireball', atk_args))
 
     def CARDspikes(self):
         #SPIKES
@@ -288,7 +289,7 @@ class obj_jogador(object):
 '''
         atk_args = (self,self.x + self.hit_box.width/2,
             y_, 0, ctxt.SPIKES_ATIME/60, ctxt.SPIKES_DAMAGE, 1.3)
-        efeitos.append(chd.charAtk('spikes', atk_args))
+        efeitos.append(fxd.fxSpawn('spikes', atk_args))
 
     def restart(self):
         self.Hp = self.maxHp
@@ -342,6 +343,10 @@ class obj_jogador(object):
         if self.dash_cooldown > 0:
             self.dash_cooldown -= 1
         if self.Hp > 0:
+            if(self.was_on_ground and not self.on_ground):
+                self.was_on_ground = self.on_ground
+                self.jstacksleft -= 1
+            self.was_on_ground = self.on_ground
             '''
             if self.isCrouch and abs(self.hspeed) == 0:            
                 self.hit_box.height = 55 * self.sc/2
@@ -607,9 +612,6 @@ class carta(object):
         self.sc = 1.2 #\in [1,2)
 
         #Ajeitando o texto
-        for i in range(len(self.txt)):
-            if (i + 1) % 23 == 0: # ~22 caracteres por linha
-                self.txt = self.txt[:i] + "\n" + self.txt[i:]
 
     def draw(self): #função que desenha o obj na tela
 
@@ -671,31 +673,62 @@ class effect(object):
             window.blit(self.sprite, (self.x + camera.x, self.y + camera.y))
 
 def draw_text(txt_,x_,y_,font_ = fnt_comicsans[4],color_ = WHITE,centered_ = True):
-    if "\n" in txt_:
+    #if "\n" in txt_:
 
         #IT HAS LINE BREAKS; (╯°□°)╯︵ ┻━┻
-
-        if centered_ == True: #Centraliza o texto
-            x_ -= font_.size(txt_de_22c)[0]/2
-            y_ -= font_.size(txt_de_22c)[1]/2
-
+        h_ = len(line_text_size)
+        t_ = len(txt_)-1
         #Escrevendo cada linha
-        i_ = 0 #n line
+        i = 0 #n line
         str_ = "" #current string with no line breaks
-
-        for i in range(len(txt_)):
-            if txt_[i] == "\n" or i == len(txt_) - 1:
-                if i == len(txt_) - 1: str_ += txt_[i]
+        f_str_ = []
+        print('startloop')
+        g = 0
+        while i-g <= t_:
+            '''
+            print("i = {}".format(i))
+            print("g = {}".format(g))
+            print("i-g = {}".format(i-g))
+            print("txt_i-g = '{}'".format(txt_[i-g]))
+            '''
+            if i-g == (h_*(len(f_str_)+1)) and i-g != 0:
+                #print("linha sem alterações = {}".format(str_))
+                s = str_.split(' ')
+                #print("palavras da linha = {}".format(s))
+                #print("palavra quebrada = " + s[-1])
+                g += len(s[-1])+1
+                s.pop(-1)
+                str_ = ' '.join(s)
+                #print(str_)
+                if str_ != '':
+                    f_str_.append(font_.render(str_, False, color_))
+                str_ = ''   
+            else:
+                m = txt_[i-g]
+                str_ += m
+                #print("added '{}', string total = ".format(m) + str_)     
+            i+=1
+        f_str_.append(font_.render(str_, False, color_))
+        #print("string final= " + str_)
+        for j in range(len(f_str_)):
+            window.blit(f_str_[j],(x_ - f_str_[j].get_width()/2, y_ - f_str_[j].get_height()/2 + fnt_comicsans_Vspace[fnt_comicsans.index(font_)]*(j) ))
+        '''
+        for j in range(len(f_str_)-1):
+            window.blit(f_str_[j],(x_,y_ + fnt_comicsans_Vspace[fnt_comicsans.index(font_)]*j))
+            if txt_[i] == \n or i == len(txt_) - 1 or i >= len(line_text_size)-1:
+                if i == len(txt_) - 1: 
+                    str_ += txt_[i]
 
                 #Each time there is a line break in string -> draw all the string before the line break
-                text_surface = font_.render(str_, False, color_)
-                window.blit(text_surface,(x_,y_ + fnt_comicsans_Vspace[fnt_comicsans.index(font_)]*i_))
+                f_str_.append(font_.render(str_, False, color_))
+                
 
                 i_ += 1 #adding n'th line
                 str_ = "" #Resets the "current string with no line breaks"
             else:
                 str_ += txt_[i] #Adding to the "current string with no line breaks"
-
+        
+        
     else:
 
         #NO LINE BREAKS; LIFE IS GOOD
@@ -706,6 +739,7 @@ def draw_text(txt_,x_,y_,font_ = fnt_comicsans[4],color_ = WHITE,centered_ = Tru
 
         text_surface = font_.render(txt_, False, color_)
         window.blit(text_surface,(x_,y_))
+    '''
 
 def draw_rectangle(x1,y1,x2,y2,color_ = WHITE):
     pg.draw.rect(window,color_,(x1,y1,(x2 - x1),(y2 - y1)))
@@ -719,7 +753,7 @@ def create_effect(efeito_1,efeito_2):
         efeitos_deposito.pop(0)
     else:
         #cria um efeito novo
-        efeitos.append(chd.charAtk(efeito_1,efeito_2))
+        efeitos.append(fxd.fxSpawn(efeito_1,efeito_2))
 
 def create_projection(anim, x, y, player_owner, on_hit_efx, while_alive_efx, _alive_time):
     if len(efeitos_deposito) > 0:
@@ -812,8 +846,7 @@ def apply_card_effect(player_,card_):
     if card_.tipo_ == "DJUMP":
         player_.jumpstack +=1
         player_.jstacksleft = player_.jumpstack
-        player_.jump -= (player_.jump-1)*0.15
-        print('pegou = {}'.format(player_.jumpstack))
+        player_.jump -= (player_.jump-1)*0.1
 
     return 0
 
@@ -879,7 +912,8 @@ last_time = time.time()
 pg.mouse.set_visible(False)
 
 while RODANDO: #game loop
-
+    
+    #RODANDO = False
     dt = clock.tick(FPS) #SETS THE FPS
 
     #dt_ = time.time() - last_time

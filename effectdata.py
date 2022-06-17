@@ -4,10 +4,10 @@ import projection as pj
 import cards_txt as ctxt
 import math
 
-def charAtk(a, t):
-	return globals()[char_atk.get(a)](*t)
+def fxSpawn(a, t):
+	return globals()[efx.get(a)](*t)
 
-char_atk = {
+efx = {
 	'wherewolf':'claws',
 	'homi':'homiatk',
 	'fireball':'fireball',

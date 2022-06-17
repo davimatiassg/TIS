@@ -45,17 +45,17 @@ CARDS_NOTSTACKABLE.append('NO_SEE') #NOT STACKABLE !!!!!!!!!!
 #DESCRIPTIONS
 CARDS_DESCRIPTIONS = {
     None: "Carta Legal.",
-    'FIREBALL': "oloco uma bola de fogo",
-    'ENHANCED_SPEED': "Você fica {0}% mais    veloz".format(round(100*(ENHANCED_SPEED_PERCENT - 1))),
-    'BLEEDING': "Aplica sangramento de {} segundos".format(round(BLEEDING_TIME/60)),
-    'ATK_WHILE_DASHING': "Você pode atacar      enquanto da o dash",
-    'ATKESQUIVA': "Aumenta o dano do primeiro ataque depois de usar uma esquiva, mas sua esquiva não te deixa invulnerável",
-    'APLIES_MORE_KNOCKBACK': "Dá mais Knockback",
-    'RECEIVES_LESS_KNOCKBACK': "Recebe menos Knockback",
-    'SURVIVAL': "Ataque aumenta em {0}% se você estiver com vida baixa".format(round(100*(SURVIVAL_ATK_MULTPLIER - 1))),
-    'SPIKES': "Espinhos surgem no local aonde você pulou",
-    'NO_SEE': "Você fica invisível enquanto não leva dano",
-    'DJUMP':  "Você pode pular mais uma vez no ar, mas seu pulo fica mais fraco."
+    'FIREBALL': 'Atacar longe de inimigos invoca uma bola de fogo.',
+    'ENHANCED_SPEED': "Você fica {0}% mais veloz.".format(round(100*(ENHANCED_SPEED_PERCENT - 1))),
+    'BLEEDING': "Ataques fazem inimigos sangrarem por {} segundos.".format(round(BLEEDING_TIME/60)),
+    'ATK_WHILE_DASHING': "Você pode atacar enquanto usa a esquiva.",
+    'ATKESQUIVA': "Aumenta o dano do primeiro ataque depois de usar uma esquiva, mas sua esquiva não te deixa invulnerável.",
+    'APLIES_MORE_KNOCKBACK': "Ataques aplicam mais repulsão.",
+    'RECEIVES_LESS_KNOCKBACK': "Recebe menos repulsão.",
+    'SURVIVAL': "Ataque aumenta em {} % se você estiver com vida baixa.".format(round(100*(SURVIVAL_ATK_MULTPLIER - 1))),
+    'SPIKES': "Espinhos surgem no local aonde você pulou.",
+    'NO_SEE': "Você fica invisível enquanto não levar dano.",
+    'DJUMP':  "Ganha um pulo extra mas seu pulo fica mais fraco."
 }
 CARDS_IMAGES = {
     None: "Carta Legal.",
