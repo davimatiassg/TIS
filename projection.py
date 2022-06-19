@@ -27,7 +27,7 @@ class Projection(object): #define uma classe projeção
 
 	def draw(self): #função que desenha o obj na tela
 		spr = self.anim.play(self.anim.current)
-		a = pg.transform.rotate(pg.transform.scale(spr,(int(spr.get_width()*self.scale),int(spr.get_height()*self.scale))), self.dir)
+		a = pg.transform.rotate(pg.transform.scale(spr,(int(spr.get_width()*self.scale),int(spr.get_height()*self.scale))), -self.dir)
 
 		new_rect = a.get_rect(center = a.get_rect(topleft = (self.hitbox.x, self.hitbox.y - self.hitbox.height/6)).center)
 		return a, new_rect.x, new_rect.y

@@ -26,9 +26,10 @@ pg.font.SysFont('Comic Sans MS', 25),
 pg.font.SysFont('Comic Sans MS', 30),
 pg.font.SysFont('Comic Sans MS', 35),
 pg.font.SysFont('Comic Sans MS', 30),
-pg.font.SysFont('Comic Sans MS', 45)
+pg.font.SysFont('Comic Sans MS', 45),
+pg.font.SysFont('Comic Sans MS', 20)
 ]
-fnt_comicsans_Vspace = [30,40,50,60,70]
+fnt_comicsans_Vspace = [30,40,50,60,70,25]
 
 #VARIAVEIS GLOBAIS
 room_width = 1600 #1280
@@ -84,7 +85,7 @@ class obj_jogador(object):
         self.player_ = player_
         self.sc = 1.75
         self.offset = offset
-
+        self.activeCards = []
         moves = ['idle', 'run', 'jump', 'tkdmg', 'atk', 'D_atk', 'A_atk', 'Crouch']
         #Framerate[8,     12,     16,     16,     32,     20,       32,      8]
         self.anim = an.Animator(moves, frates, char, 'char_')
@@ -97,7 +98,7 @@ class obj_jogador(object):
         self.start_y = y
 
         #Caracteristicas gerais do obj
-        self.Hp = 50 #Vida
+        self.Hp = 1 #Vida
         self.maxHp = self.Hp
         self.Atk = 4 #Dano
         self.AtkRange = 8 #Range do Atk
@@ -329,6 +330,23 @@ class obj_jogador(object):
                 self.vspeed = 0
                 self.hit_box.top = tile.hit_box.bottom
 
+    def addCard(self, ct, sp):
+        cIsCopy_ = False
+        for i in self.activeCards:
+            if i[0] == ct:
+                ci = self.activeCards.index(i)
+                self.activeCards[ci][2] +=1
+                if self.player_ == 0:
+                    print(self.activeCards[ci][2])
+                cIsCopy_ = True
+                copyidx_ = self.activeCards.index(i)
+        if not cIsCopy_:
+            self.activeCards.append([ct, sp,  1])
+
+        if self.player_ == 0:
+            for i in self.activeCards:
+                print('Carta: {}, quantidade: {}'.format(i[0], i[2]))
+            print(self.activeCards)
 
     def step(self): #função que executa o cógido geral do jogador
         if self.atk_cooldown >= 1:
@@ -531,7 +549,7 @@ class obj_jogador(object):
             else:
                 self.TIME_NO_SEE = 0
 
-            #Drawing Healthbar
+            #Drawing Healthbar and Cards
             if self.player_ == 0:
                 draw_rectangle(rel_width/2,rel_height/2,
                 rel_width/2 + 500,rel_height/2 + 80,(0,100,0))
@@ -541,12 +559,22 @@ class obj_jogador(object):
 
                 draw_text(self.char,rel_width/2 + 250,rel_height/2 + 40,color_ = BLACK)
 
+                for k in self.activeCards:
+                    ki = self.activeCards.index(k)
+                    window.blit(k[1], (8 + rel_width/2 +(ki - 7*(ki//7))*(k[1].get_width()+8), rel_height/2 + 96 + (ki//7)*(k[1].get_height()+8)))
+                    draw_text(str(k[2]), 16 + rel_width/2 + (ki - 7*(ki//7))*(k[1].get_width()+8) , rel_height/2 + 104 + (ki//7)*(k[1].get_height()+8),font_ = fnt_comicsans[5],color_ = WHITE)
             if self.player_ == 1:
                 draw_rectangle(rel_width/2 + room_width - 500,rel_height/2,
                 rel_width/2 + room_width,rel_height/2 + 80,(0,100,0))
                 draw_rectangle(rel_width/2 + room_width - 500*(self.Hp/self.maxHp),
                 rel_height/2,rel_width/2 + room_width,rel_height/2 + 80,GREEN)
                 draw_text(self.char,rel_width/2 + room_width - 250,rel_height/2 + 40,color_ = BLACK)
+
+                for k in self.activeCards:
+                    ki = self.activeCards.index(k)
+
+                    window.blit(k[1], (rel_width/2 + room_width -(ki - 7*(ki//7))*(k[1].get_width()+8)-72, rel_height/2 + 96 + (ki//7)*(k[1].get_height()+8)))
+                    draw_text(str(k[2]), rel_width/2 +  room_width -64 - (ki - 7*(ki//7)) *(k[1].get_width()+8), rel_height/2 + 104 + (ki//7)*(k[1].get_height()+8),font_ = fnt_comicsans[5],color_ = WHITE)
 
 class obj_bloco(object):
     def __init__(self,spr,x,y):
@@ -853,6 +881,10 @@ def apply_card_effect(player_,card_):
         player_.jumpstack +=1
         player_.jstacksleft = player_.jumpstack
         player_.jump -= (player_.jump-1)*0.1
+    miniature = pg.transform.scale(card_.sprite, (64, 64))
+    pg.draw.rect(miniature, BLACK, (0, 0, 14, 20))
+
+    player_.addCard(card_.tipo_, miniature)
 
     return 0
 
