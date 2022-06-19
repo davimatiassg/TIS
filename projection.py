@@ -67,6 +67,11 @@ class Projection(object): #define uma classe projeção
 		self.anim.play('explode')
 		self.t = args[0]
 
+	def freeze(self, slow, time, tg):
+		if tg != None:
+			tg.SLOW_FORCE = (1-slow)
+			tg.SLOW_TIME = time
+
 	def bleeding(self, applies_, tg):
 		if applies_ == True: tg.TIME_BLEEDING = ctxt.BLEEDING_TIME
 

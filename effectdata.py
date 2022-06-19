@@ -12,7 +12,8 @@ efx = {
 	'homi':'homiatk',
 	'fireball':'fireball',
 	'wug':'missile',
-	'spikes': 'spikes'
+	'spikes': 'spikes',
+	'iceball': 'iceball'
 }
 
 def claws(player, x, y, di, atime, dmg, knk, size = 1.5):
@@ -49,6 +50,18 @@ def fireball(player, x, y, di, atime, dmg, knk, s = 2):
 	}
 	pfx = {
 	'move':[[ctxt.FIREBALL_SPEED*math.cos((2*math.pi)*di/360), ctxt.FIREBALL_SPEED*math.sin((2*math.pi)*di/360)]]
+	}
+	return pj.Projection(anim, x, y, di, player, hfx, pfx, atime, False, s)
+
+def iceball(player, x, y, di, atime, dmg, knk, s = 2):
+	anim = an.Animator(['iceball','explode'], [9,50], 'iceball', 'fx_')
+	hfx = {
+	'block_contact': [],
+	'explode': [14],
+	'freeze': [ctxt.ICE_SLOW, ctxt.ICE_TIME]
+	}
+	pfx = {
+	'move':[[ctxt.ICEBALL_SPEED*math.cos((2*math.pi)*di/360), ctxt.ICEBALL_SPEED*math.sin((2*math.pi)*di/360)]]
 	}
 	return pj.Projection(anim, x, y, di, player, hfx, pfx, atime, False, s)
 

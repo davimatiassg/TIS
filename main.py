@@ -134,6 +134,7 @@ class obj_jogador(object):
         self.isAtacking = False  #está atacando?
         self.isCrouch = False #está agachado?
         #CARDs stuff
+
         self.HAS_FIRE_BALL = False;self.FIRE_BALL_AMMOUNT = 0
         self.APPLIES_BLEEDING = False;self.TIME_BLEEDING = 0;self.BLEEDING_DAMAGE = 0
         self.ATK_WHILE_DASHING = False
@@ -142,6 +143,9 @@ class obj_jogador(object):
         self.SURVIVAL_ATK_MULTPLIER = 1
         self.SPIKES = False
         self.NO_SEE = False;self.TIME_NO_SEE = 1
+        self.FRZ_CHANCE = 0
+        self.SLOW_TIME = 0
+        self.SLOW_FORCE = 1
 
     def getPlayerInput(self, klist, alist):
         #marcadores de h i t b o x.
@@ -184,6 +188,8 @@ class obj_jogador(object):
                         self.isAtacking = True
                         self.atk_cooldown = self.atk_delay
                         self.FIRST_ATK_AFTER_DASH = True
+                        if(random.randint(0,100)/100 <= self.FRZ_CHANCE):
+                            self.CARDiceball()
                         if(klist[2]):
                             self.UpAtk()
                         elif(self.isCrouch):
@@ -274,6 +280,14 @@ class obj_jogador(object):
                 atk_args = (self, self.hspeed + self.x + self.hit_box.width*0.2 + self.last_direction_moved*(self.hit_box.width + self.AtkRange),
                     self.y + self.hit_box.height/5, random.randint(0,359), ctxt.FIREBALL_ATIME, ctxt.FIREBALL_ATK, ctxt.FIREBALL_KNOCKBACK)
                 efeitos.append(fxd.fxSpawn('fireball', atk_args))
+
+    def CARDiceball(self):
+        #FireBall Attack
+        atk_args = (self, self.x + self.hit_box.width + self.last_direction_moved*(self.hit_box.width + self.AtkRange),
+            self.y + self.hit_box.height/5, (90 -(90*self.last_direction_moved)), ctxt.FIREBALL_ATIME, 0, 0)
+        efeitos.append(fxd.fxSpawn('iceball', atk_args))
+        self.atk_cooldown += self.atk_delay/2
+
 
     def CARDspikes(self):
         #SPIKES
@@ -474,9 +488,12 @@ class obj_jogador(object):
             #Atualizando a velocidade || HORIZONTAL
             self.hspeed = fs.friction(self.hspeed,self.fric)
             if abs(self.hspeed) > self.max_hspeed: self.hspeed = self.max_hspeed*fs.sign(self.hspeed) #max speed
-
+            if(self.SLOW_TIME>0):
+                self.hspeed *= self.SLOW_FORCE
+                self.SLOW_TIME -= 1
             #Atualizando a velocidade || VERTICAL
             self.vspeed += self.grav
+
 
             self.hit_box.x += self.hspeed*dt
             self.x = self.hit_box.x
@@ -881,6 +898,10 @@ def apply_card_effect(player_,card_):
         player_.jumpstack +=1
         player_.jstacksleft = player_.jumpstack
         player_.jump -= (player_.jump-1)*0.1
+    if card_.tipo_ == "ICEFORM":
+        player_.FRZ_CHANCE += ctxt.ICE_CHANCE
+
+
     miniature = pg.transform.scale(card_.sprite, (64, 64))
     pg.draw.rect(miniature, BLACK, (0, 0, 14, 20))
 

@@ -43,6 +43,13 @@ SPIKES_ATIME = 0.8*60 #in frames
 NO_SEE_COOLDOWN = 2*60 #in frames
 CARDS_NOTSTACKABLE.append('NO_SEE') #NOT STACKABLE !!!!!!!!!!
 
+#ICEFORM
+ICE_CHANCE = 0.2 #in frames
+ICE_TIME = 2*60
+ICE_SLOW = 0.2
+ICEBALL_ATIME = 1.2*60 #in frames
+ICEBALL_SPEED = 5
+
 #DESCRIPTIONS
 CARDS_DESCRIPTIONS = {
     None: "Carta Legal.",
@@ -56,7 +63,8 @@ CARDS_DESCRIPTIONS = {
     'SURVIVAL': "Ataque aumenta em {}% se você estiver com vida baixa.".format(round(100*(SURVIVAL_ATK_MULTPLIER - 1))),
     'SPIKES': "Espinhos surgem no local aonde você pulou.",
     'NO_SEE': "Você fica invisível enquanto não levar dano.",
-    'DJUMP':  "Ganha um pulo extra mas seu pulo fica mais fraco."
+    'DJUMP':  "Ganha um pulo extra mas seu pulo fica mais fraco.",
+    'ICEFORM': "{}% de chance de lançar uma bola congelante, que desacelera o alvo por {} segundo(s)".format(round(100*ICE_CHANCE), ICE_TIME//60),
 }
 CARDS_IMAGES = {
     None: "Carta Legal.",
@@ -70,5 +78,6 @@ CARDS_IMAGES = {
     'SURVIVAL': 'Graphics/cards/survival.png',
     'SPIKES': 'Graphics/cards/spikes.png',
     'NO_SEE': 'Graphics/cards/nosee.png',
-    'DJUMP': 'Graphics/cards/doublejump.png'
+    'DJUMP': 'Graphics/cards/doublejump.png',
+    'ICEFORM':'Graphics/cards/icebeam.png'
 }
