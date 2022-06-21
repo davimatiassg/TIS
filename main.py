@@ -98,10 +98,11 @@ class obj_jogador(object):
         self.start_y = y
 
         #Caracteristicas gerais do obj
-        self.Hp = 1 #Vida
+        self.Hp = 50 #Vida
         self.maxHp = self.Hp
         self.Atk = 4 #Dano
         self.AtkRange = 8 #Range do Atk
+        self.atkSc = 1 #Tamanho do ataque
         self.hspeed = 0 #velocidade horizontal
         self.vspeed = 0 #velocidade vertical
         self.speed = 0 #velocidade total
@@ -136,7 +137,7 @@ class obj_jogador(object):
         #CARDs stuff
 
         self.HAS_FIRE_BALL = False;self.FIRE_BALL_AMMOUNT = 0
-        self.APPLIES_BLEEDING = False;self.TIME_BLEEDING = 0;self.BLEEDING_DAMAGE = 0
+        self.APPLIES_BLEEDING = 0; self.APP_BLD_TIME = 0; self.TIME_BLEEDING = 0;self.BLEEDING_DAMAGE = 0
         self.ATK_WHILE_DASHING = False
         self.ATKESQUIVA = False;self.FIRST_ATK_AFTER_DASH = False
         self.APLIES_MORE_KNOCKBACK = 1
@@ -146,6 +147,9 @@ class obj_jogador(object):
         self.FRZ_CHANCE = 0
         self.SLOW_TIME = 0
         self.SLOW_FORCE = 1
+        self.ANTIG_TIME = 0
+        self.ANTIG_ATK = 0
+        self.ATKFX = {}
 
     def getPlayerInput(self, klist, alist):
         #marcadores de h i t b o x.
@@ -188,7 +192,7 @@ class obj_jogador(object):
                         self.isAtacking = True
                         self.atk_cooldown = self.atk_delay
                         self.FIRST_ATK_AFTER_DASH = True
-                        if(random.randint(0,100)/100 <= self.FRZ_CHANCE):
+                        if(random.randint(1,100)/100 < self.FRZ_CHANCE):
                             self.CARDiceball()
                         if(klist[2]):
                             self.UpAtk()
@@ -224,10 +228,10 @@ class obj_jogador(object):
         #    self.y + self.hit_box.height/5, (90 -(90*self.last_direction_moved)), 0.15, (self.Atk + atk_increase_)*atk_mult, self.knockback*self.APLIES_MORE_KNOCKBACK)
 
         atk_args = (self,self.hit_box.x + self.hit_box.width/2 + self.last_direction_moved*self.AtkRange*15,
-            self.y +self.hit_box.height/4, (90 -(90*self.last_direction_moved)), 0.15, (self.Atk + atk_increase_)*atk_mult, self.knockback*self.APLIES_MORE_KNOCKBACK)
+            self.y +self.hit_box.height/4, (90 -(90*self.last_direction_moved)), 0.15, (self.Atk + atk_increase_)*atk_mult, 
+            self.knockback*self.APLIES_MORE_KNOCKBACK, self.atkSc, self.ATKFX)
 
         efeitos.append(fxd.fxSpawn(self.char, atk_args))
-
         self.FIRST_ATK_AFTER_DASH = False
         
     def UpAtk(self):
@@ -242,7 +246,8 @@ class obj_jogador(object):
         #atk_args = (self, self.hspeed + self.x + self.hit_box.width*0.2 + self.last_direction_moved*(self.hit_box.width + self.AtkRange),
         #    self.y + self.hit_box.height/5, (90 -(90*self.last_direction_moved)), 0.15, (self.Atk + atk_increase_)*atk_mult, self.knockback*self.APLIES_MORE_KNOCKBACK)
 
-        atk_args = (self, self.x + self.hit_box.width/2 , self.y - self.hit_box.height*0.5, 90, 0.15, (self.Atk + atk_increase_)*atk_mult, self.knockback*self.APLIES_MORE_KNOCKBACK, 2)
+        atk_args = (self, self.x + self.hit_box.width/2 , self.y - self.hit_box.height*0.5, 270, 0.15, 
+            (self.Atk + atk_increase_)*atk_mult, self.knockback*self.APLIES_MORE_KNOCKBACK, 1.2*self.atkSc, self.ATKFX)
 
         efeitos.append(fxd.fxSpawn(self.char, atk_args))
 
@@ -263,7 +268,8 @@ class obj_jogador(object):
                 #atk_args = (self, self.hspeed + self.x + self.hit_box.width*0.2 + self.last_direction_moved*(self.hit_box.width + self.AtkRange),
                 #    self.y + self.hit_box.height/5, (90 -(90*self.last_direction_moved)), 0.15, (self.Atk + atk_increase_)*atk_mult, self.knockback*self.APLIES_MORE_KNOCKBACK)
 
-                atk_args = (self, self.x + self.hit_box.width/2, self.y + self.hit_box.height*1.1, 270, 0.15, (self.Atk + atk_increase_)*atk_mult, self.knockback*self.APLIES_MORE_KNOCKBACK, 2)
+                atk_args = (self, self.x + self.hit_box.width/2, self.y + self.hit_box.height*1.1, 90, 0.15, 
+                    (self.Atk + atk_increase_)*atk_mult, self.knockback*self.APLIES_MORE_KNOCKBACK, self.atkSc, self.ATKFX)
 
                 efeitos.append(fxd.fxSpawn(self.char, atk_args))
 
@@ -272,19 +278,19 @@ class obj_jogador(object):
     def CARDfireball(self):
         #FireBall Attack
         atk_args = (self, self.hspeed + self.x + self.hit_box.width*0.2 + self.last_direction_moved*(self.hit_box.width + self.AtkRange),
-            self.y + self.hit_box.height/5, (90 -(90*self.last_direction_moved)), ctxt.FIREBALL_ATIME, ctxt.FIREBALL_ATK, ctxt.FIREBALL_KNOCKBACK)
+            self.y + self.hit_box.height/5, (90 -(90*self.last_direction_moved)), ctxt.FIREBALL_ATIME, ctxt.FIREBALL_ATK, ctxt.FIREBALL_KNOCKBACK, self.atkSc, self.ATKFX)
         efeitos.append(fxd.fxSpawn('fireball', atk_args))
         self.atk_cooldown += self.atk_delay/2
         if self.FIRE_BALL_AMMOUNT > 1:
             for i in range(self.FIRE_BALL_AMMOUNT - 1):
                 atk_args = (self, self.hspeed + self.x + self.hit_box.width*0.2 + self.last_direction_moved*(self.hit_box.width + self.AtkRange),
-                    self.y + self.hit_box.height/5, random.randint(0,359), ctxt.FIREBALL_ATIME, ctxt.FIREBALL_ATK, ctxt.FIREBALL_KNOCKBACK)
+                    self.y + self.hit_box.height/5, random.randint(0,359), ctxt.FIREBALL_ATIME, ctxt.FIREBALL_ATK, ctxt.FIREBALL_KNOCKBACK, self.atkSc, self.ATKFX)
                 efeitos.append(fxd.fxSpawn('fireball', atk_args))
 
     def CARDiceball(self):
         #FireBall Attack
         atk_args = (self, self.x + self.hit_box.width + self.last_direction_moved*(self.hit_box.width + self.AtkRange),
-            self.y + self.hit_box.height/5, (90 -(90*self.last_direction_moved)), ctxt.FIREBALL_ATIME, 0, 0)
+            self.y + self.hit_box.height/5, (90 -(90*self.last_direction_moved)), ctxt.FIREBALL_ATIME, 0, 0, 1, self.ATKFX)
         efeitos.append(fxd.fxSpawn('iceball', atk_args))
         self.atk_cooldown += self.atk_delay/2
 
@@ -313,6 +319,8 @@ class obj_jogador(object):
         self.hit_box.x = self.start_x
         self.hit_box.y = self.start_y
         self.TIME_BLEEDING = 0
+        self.ANTIG_TIME = 0
+        self.SLOW_TIME = 0
 
     def getCollisions(self, tiles):
         hits = []
@@ -350,19 +358,17 @@ class obj_jogador(object):
             if i[0] == ct:
                 ci = self.activeCards.index(i)
                 self.activeCards[ci][2] +=1
-                if self.player_ == 0:
-                    print(self.activeCards[ci][2])
                 cIsCopy_ = True
                 copyidx_ = self.activeCards.index(i)
+
         if not cIsCopy_:
             self.activeCards.append([ct, sp,  1])
 
-        if self.player_ == 0:
-            for i in self.activeCards:
-                print('Carta: {}, quantidade: {}'.format(i[0], i[2]))
-            print(self.activeCards)
-
     def step(self): #função que executa o cógido geral do jogador
+        if (self.hit_box.x < 0 or self.hit_box.x > rel_width/2 + room_width 
+            or self.hit_box.y < 0 or self.hit_box.y >rel_height +room_height):
+            self.hit_box.x = rel_width+room_width/2
+            self.hit_box.y = rel_height+room_height/2
         if self.atk_cooldown >= 1:
             self.atk_cooldown-=1
             b = self.anim.getDuration()*FPS
@@ -487,13 +493,18 @@ class obj_jogador(object):
 
             #Atualizando a velocidade || HORIZONTAL
             self.hspeed = fs.friction(self.hspeed,self.fric)
-            if abs(self.hspeed) > self.max_hspeed: self.hspeed = self.max_hspeed*fs.sign(self.hspeed) #max speed
+            if abs(self.hspeed) > self.max_hspeed: 
+                self.hspeed -= fs.sign(self.hspeed)*(self.max_hspeed-abs(hspeed))/5#max speed
             if(self.SLOW_TIME>0):
                 self.hspeed *= self.SLOW_FORCE
                 self.SLOW_TIME -= 1
             #Atualizando a velocidade || VERTICAL
-            self.vspeed += self.grav
+            if self.ANTIG_TIME <= 0:
+                self.vspeed += self.grav
+            else:
+                self.ANTIG_TIME -= 1
 
+            
 
             self.hit_box.x += self.hspeed*dt
             self.x = self.hit_box.x
@@ -510,9 +521,12 @@ class obj_jogador(object):
 
             #bleeding
             if self.TIME_BLEEDING > 0:
-                if fs.divs(self.TIME_BLEEDING,ctxt.BLEEDING_RATE) == True:
-                    self.takeDamage(self.enemy.BLEEDING_DAMAGE,[0,0])
+                if fs.divs(self.TIME_BLEEDING, ctxt.BLEEDING_RATE):
+                    
+                    self.takeDamage(self.BLEEDING_DAMAGE,[0,0])
                 self.TIME_BLEEDING -= 1
+
+
 
         else: #Player Has Died
             points[self.enemy.player_] += 1
@@ -877,8 +891,15 @@ def apply_card_effect(player_,card_):
         player_.max_hspeed *= ctxt.ENHANCED_SPEED_PERCENT
         player_.hacel *= ctxt.ENHANCED_SPEED_PERCENT
     if card_.tipo_ == "BLEEDING":
-        player_.APPLIES_BLEEDING = True
-        player_.BLEEDING_DAMAGE += ctxt.BLEEDING_DAMAGE
+        
+
+        if player_.APPLIES_BLEEDING == 0:
+            player_.APP_BLD_TIME += ctxt.BLEEDING_TIME * 2/3
+            player_.APPLIES_BLEEDING += ctxt.BLEEDING_DAMAGE/2
+        player_.APP_BLD_TIME += ctxt.BLEEDING_TIME * 1/3
+        player_.APPLIES_BLEEDING += ctxt.BLEEDING_DAMAGE/2
+        player_.ATKFX.update({'bleeding': [player_.APP_BLD_TIME, player_.APPLIES_BLEEDING]})
+
     if card_.tipo_ == "ATK_WHILE_DASHING":
         player_.ATK_WHILE_DASHING = True
     if card_.tipo_ == "ATKESQUIVA":
@@ -900,7 +921,12 @@ def apply_card_effect(player_,card_):
         player_.jump -= (player_.jump-1)*0.1
     if card_.tipo_ == "ICEFORM":
         player_.FRZ_CHANCE += ctxt.ICE_CHANCE
-
+    if card_.tipo_ == "HARDATK":
+        player_.Atk += ctxt.HARDATK
+    if card_.tipo_ == "ANTIGRAV":
+        player_.ANTIG_ATK += ctxt.ANTIG_ATK
+        player_.ATKFX.update({'antigrav': [player_.ANTIG_ATK]})
+        
 
     miniature = pg.transform.scale(card_.sprite, (64, 64))
     pg.draw.rect(miniature, BLACK, (0, 0, 14, 20))

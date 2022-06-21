@@ -48,16 +48,16 @@ class Projection(object): #define uma classe projeção
 		## direção do movimento, em graus de inclinação em relação à direita
 		## velocidade do movimento
 		self.hitbox.x += _speed[0] ## atualiza posição no eixo x
-		self.hitbox.y += _speed[1] ## atualiza posição no eixo y
+		self.hitbox.y -= _speed[1] ## atualiza posição no eixo y
 
-	def damage(self, dmg, knockback, tg):
+	def damage(self, dmg, knockback, tg = None):
 		if tg != None:
 			k = []
-			k.append(knockback*math.cos(self.dir*2*math.pi/360))
-			k.append(knockback*math.sin(self.dir*2*math.pi/360) + 1)
+			k.append(1.35*knockback*math.cos(self.dir*2*math.pi/360))
+			k.append(knockback*math.sin(self.dir*2*math.pi/360) - knockback/3)
 			tg.takeDamage(dmg, k)
 
-	def lifesteal(self, player, dmg, tg):
+	def lifesteal(self, player, dmg, tg = None):
 		if player.Hp < player.maxHp:
 			player.Hp += dmg/4
 			if player.Hp > player.maxHp:
@@ -67,20 +67,35 @@ class Projection(object): #define uma classe projeção
 		self.anim.play('explode')
 		self.t = args[0]
 
-	def freeze(self, slow, time, tg):
+	def freeze(self, slow, time, tg = None):
 		if tg != None:
 			tg.SLOW_FORCE = (1-slow)
 			tg.SLOW_TIME = time
 
-	def bleeding(self, applies_, tg):
-		if applies_ == True: tg.TIME_BLEEDING = ctxt.BLEEDING_TIME
+	def bleeding(self, time, dmg, tg = None):
+		if tg != None:
+			if tg.TIME_BLEEDING <= 0: 
+				tg.BLEEDING_DAMAGE = 0
+				tg.TIME_BLEEDING += time
+				tg.BLEEDING_DAMAGE += dmg
+			else:
+				tg.TIME_BLEEDING += time/3
+				tg.BLEEDING_DAMAGE += dmg/5
+			
+
+
+	def antigrav(self, an_g_time, tg = None):
+		if tg != None:
+			tg.ANTIG_TIME += an_g_time
+			tg.unabletime += an_g_time/10
+		return None
 
 	def block_contact(self,*args):
 		return 0
 
 	def step(self, plist, is_colliding):
-		if(self.t > 0):											## enquanto estiver ativo
-			self.t -= 1											## diminua o tempo ativo
+		if(self.t > 0):												## enquanto estiver ativo
+			self.t -= 1												## diminua o tempo ativo
 			self.anim.play(self.anim.animations[0].name)
 			for i in self.passive:
 				fullargs = self.passive.get(i)
@@ -93,16 +108,16 @@ class Projection(object): #define uma classe projeção
 						fullargs.append(i)
 						hitfx = getattr(Projection, j)
 						hitfx(self, *tuple(fullargs))
+						fullargs.remove(i)
 					self.vanish()
 
 			#COLLIDING WITH BLOCKS
 			if is_colliding and ('block_contact' in self.on_hit):
 				for j in self.on_hit:
 					fullargs = self.on_hit.get(j)
-					fullargs.append(None) #its colliding with the player "None"
+					#fullargs.append(None) #its colliding with the player "None"
 					hitfx = getattr(Projection, j)
 					hitfx(self, *tuple(fullargs))
-
 				self.vanish()
 
 												## para cada string j com o nome de um método que roda ao contato dentro do dicionário

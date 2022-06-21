@@ -13,9 +13,9 @@ FIREBALL_SPEED = 15
 ENHANCED_SPEED_PERCENT = 1.25
 
 #BLEEDING
-BLEEDING_TIME = 3*60 #in frames
-BLEEDING_RATE = 0.6*60 #in frames
-BLEEDING_DAMAGE = 1
+BLEEDING_TIME = 2*60 #in frames
+BLEEDING_RATE = 24 #in frames
+BLEEDING_DAMAGE = 0.6
 
 #ATTACK WHILE DASHING
 CARDS_NOTSTACKABLE.append('ATKESQUIVA_INCREASE') #NOT STACKABLE !!!!!!!!!!
@@ -25,11 +25,11 @@ ATKESQUIVA_INCREASE = 2
 CARDS_NOTSTACKABLE.append('ATK_WHILE_DASHING') #NOT STACKABLE !!!!!!!!!!
 
 #Dá mais knockback
-APLIES_MORE_KNOCKBACK = 1.75
+APLIES_MORE_KNOCKBACK = 1.45
 
 #Recebe menos knockback
-RECEIVES_LESS_KNOCKBACK = 1.5
-RECEIVES_LESS_DAMAGE = 0.1
+RECEIVES_LESS_KNOCKBACK = 1.6
+RECEIVES_LESS_DAMAGE = 0.15
 
 #SURVIVAL (x% de vida -> ataque ++)
 SURVIVAL_MIN_HP = 0.2
@@ -50,6 +50,11 @@ ICE_SLOW = 0.2
 ICEBALL_ATIME = 1.2*60 #in frames
 ICEBALL_SPEED = 5
 
+#ANTIGRAV
+ANTIG_ATK = 0.5*60
+
+#HARDATK
+HARDATK = 1
 #DESCRIPTIONS
 CARDS_DESCRIPTIONS = {
     None: "Carta Legal.",
@@ -65,6 +70,8 @@ CARDS_DESCRIPTIONS = {
     'NO_SEE': "Você fica invisível enquanto não levar dano.",
     'DJUMP':  "Ganha um pulo extra mas seu pulo fica mais fraco.",
     'ICEFORM': "{}% de chance de lançar uma bola congelante, que desacelera o alvo por {} segundo(s)".format(round(100*ICE_CHANCE), ICE_TIME//60),
+    'ANTIGRAV':'Ataques paralizam por mais tempo e deixam o alvo em gravidade zero por {} segundo(s)'.format(ANTIG_ATK/60),
+    'HARDATK':'Ataques causam mais {} ponto(s) de dano'.format(HARDATK)
 }
 CARDS_IMAGES = {
     None: "Carta Legal.",
@@ -79,5 +86,7 @@ CARDS_IMAGES = {
     'SPIKES': 'Graphics/cards/spikes.png',
     'NO_SEE': 'Graphics/cards/nosee.png',
     'DJUMP': 'Graphics/cards/doublejump.png',
-    'ICEFORM':'Graphics/cards/icebeam.png'
+    'ICEFORM':'Graphics/cards/icebeam.png',
+    'ANTIGRAV':'Graphics/cards/antigrav.png',
+    'HARDATK':'Graphics/cards/axe.png'
 }
