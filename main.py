@@ -8,6 +8,7 @@ import random
 import effectdata as fxd
 import projection as pj
 import cards_txt as ctxt
+import chardata as chd
 import time
 from tiles import *
 #SETUP DA TELA (só mexa no width e height)
@@ -79,7 +80,7 @@ snd_sound = pg.mixer.Sound("z4.wav")
 
 #OBJETOS / CLASSES / FUNÇÕES
 class obj_jogador(object):
-    def __init__(self, char, x, y, player_, frates = [8, 12, 16, 16, 32, 20, 32, 8], offset = [0, 0]):
+    def __init__(self, x, y, player_, char, frates = [8, 12, 16, 16, 32, 20, 32, 8], offset = [0, 0]):
         #Caracteristicas do obj definidas na criação
         self.char = char
         self.player_ = player_
@@ -150,6 +151,13 @@ class obj_jogador(object):
         self.ANTIG_TIME = 0
         self.ANTIG_ATK = 0
         self.ATKFX = {}
+
+    def getStats(self, kwargs):
+        for i in kwargs.keys():
+            try:
+                setattr(self, i, kwargs.get(i))
+            except:
+                pass
 
     def getPlayerInput(self, klist, alist):
         #marcadores de h i t b o x.
@@ -246,7 +254,7 @@ class obj_jogador(object):
         #atk_args = (self, self.hspeed + self.x + self.hit_box.width*0.2 + self.last_direction_moved*(self.hit_box.width + self.AtkRange),
         #    self.y + self.hit_box.height/5, (90 -(90*self.last_direction_moved)), 0.15, (self.Atk + atk_increase_)*atk_mult, self.knockback*self.APLIES_MORE_KNOCKBACK)
 
-        atk_args = (self, self.x + self.hit_box.width/2 , self.y - self.hit_box.height*0.5, 270, 0.15, 
+        atk_args = (self, self.x + self.hit_box.width/2 , self.y - self.hit_box.height*0.5, 90, 0.15, 
             (self.Atk + atk_increase_)*atk_mult, self.knockback*self.APLIES_MORE_KNOCKBACK, 1.2*self.atkSc, self.ATKFX)
 
         efeitos.append(fxd.fxSpawn(self.char, atk_args))
@@ -268,7 +276,7 @@ class obj_jogador(object):
                 #atk_args = (self, self.hspeed + self.x + self.hit_box.width*0.2 + self.last_direction_moved*(self.hit_box.width + self.AtkRange),
                 #    self.y + self.hit_box.height/5, (90 -(90*self.last_direction_moved)), 0.15, (self.Atk + atk_increase_)*atk_mult, self.knockback*self.APLIES_MORE_KNOCKBACK)
 
-                atk_args = (self, self.x + self.hit_box.width/2, self.y + self.hit_box.height*1.1, 90, 0.15, 
+                atk_args = (self, self.x + self.hit_box.width/2, self.y + self.hit_box.height*1.1, -90, 0.15, 
                     (self.Atk + atk_increase_)*atk_mult, self.knockback*self.APLIES_MORE_KNOCKBACK, self.atkSc, self.ATKFX)
 
                 efeitos.append(fxd.fxSpawn(self.char, atk_args))
@@ -311,7 +319,7 @@ class obj_jogador(object):
             y_ = room_height - 64
 '''
         atk_args = (self,self.x + self.hit_box.width/2,
-            y_, 0, ctxt.SPIKES_ATIME/60, ctxt.SPIKES_DAMAGE, 1.3)
+            y_, 0, ctxt.SPIKES_ATIME/60, ctxt.SPIKES_DAMAGE, 1.3, self.ATKFX)
         efeitos.append(fxd.fxSpawn('spikes', atk_args))
 
     def restart(self):
@@ -865,7 +873,7 @@ def spawn_cards():
                 return choosen_card
 
     if len(cartas_deposito) == 0:
-        cartas.append(carta(room_width/2 - 700 + camera.x,200 + camera.y,choose_card_type(),0))
+        cartas.append(carta(room_width/2 - 700 + camera.x,200 + camera.y, choose_card_type(),0))
         cartas.append(carta(room_width/2 - 160 + camera.x,200 + camera.y,choose_card_type(),1))
         cartas.append(carta(room_width/2 + 700 - 320 + camera.x,200 + camera.y,choose_card_type(),2))
     else:
@@ -961,9 +969,10 @@ def escolhendo_cartas(player_):
             cartas_deposito.append(c)
         cartas.clear()
 
-#CRIANDO OS BLOCOS
-blocos = TileMap('forest', rel_width, rel_height)
-bg = pg.transform.scale(pg.image.load('Graphics/background/'+'forest'+'.png').convert(),(window_width - rel_width - 64, window_height - rel_height-64))
+#CRIANDO O MAPA
+MAP = 'forest'
+blocos = TileMap(MAP, rel_width, rel_height)
+bg = pg.transform.scale(pg.image.load('Graphics/background/'+MAP+'.png').convert(),(window_width - rel_width - 64, window_height - rel_height-64))
 
 #CRIANDO ADEMAIS
 
@@ -982,9 +991,15 @@ Round = 0
 #CRIANDO OS JOGADORES
 #wug args [8, 12, 16, 16, 48, 48, 48, 8], [54, 128]
 #homi args [8, 12, 16, 16, 32, 20, 32, 8], [0, 15]
-jogador1 = obj_jogador('wug',250,450,0, [8, 12, 16, 16, 28, 48, 48, 8], [54, 128])
-jogador1.atk_delay = 24
-jogador2 = obj_jogador('wherewolf',room_width - 250,450,1)
+p1char = 'wherewolf'
+p1data = chd.GetCharAtributes(p1char)
+p2char = 'homi'
+p2data = chd.GetCharAtributes(p2char)
+
+jogador1 = obj_jogador(250,450,0, p1char, p1data.get('F_rate'), p1data.get('Spr_offset'))
+jogador2 = obj_jogador(room_width - 250,450,1, p2char, p2data.get('F_rate'), p2data.get('Spr_offset'))
+jogador1.getStats(p1data)
+jogador2.getStats(p2data)
 playerList = [jogador1, jogador2]
 jogador1.enemy = jogador2
 jogador2.enemy = jogador1

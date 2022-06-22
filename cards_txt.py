@@ -3,11 +3,11 @@ import pygame as pg
 CARDS_NOTSTACKABLE = []
 
 #FIREBALL
-FIREBALL_ATK_RANGE = 240
+FIREBALL_ATK_RANGE = 240*2
 FIREBALL_ATIME = 1.2*60 #in frames
-FIREBALL_KNOCKBACK = 1.8
-FIREBALL_ATK = 3
-FIREBALL_SPEED = 15
+FIREBALL_KNOCKBACK = 1.2
+FIREBALL_ATK = 2
+FIREBALL_SPEED = 14
 
 #ENHANCED_SPEED
 ENHANCED_SPEED_PERCENT = 1.25
@@ -25,7 +25,7 @@ ATKESQUIVA_INCREASE = 2
 CARDS_NOTSTACKABLE.append('ATK_WHILE_DASHING') #NOT STACKABLE !!!!!!!!!!
 
 #Dá mais knockback
-APLIES_MORE_KNOCKBACK = 1.45
+APLIES_MORE_KNOCKBACK = 1.35
 
 #Recebe menos knockback
 RECEIVES_LESS_KNOCKBACK = 1.6
@@ -45,10 +45,10 @@ CARDS_NOTSTACKABLE.append('NO_SEE') #NOT STACKABLE !!!!!!!!!!
 
 #ICEFORM
 ICE_CHANCE = 0.2 #in frames
-ICE_TIME = 2*60
-ICE_SLOW = 0.2
+ICE_TIME = 0.5*60
+ICE_SLOW = 0.25
 ICEBALL_ATIME = 1.2*60 #in frames
-ICEBALL_SPEED = 5
+ICEBALL_SPEED = 7
 
 #ANTIGRAV
 ANTIG_ATK = 0.5*60
@@ -69,7 +69,7 @@ CARDS_DESCRIPTIONS = {
     'SPIKES': "Espinhos surgem no local aonde você pulou.",
     'NO_SEE': "Você fica invisível enquanto não levar dano.",
     'DJUMP':  "Ganha um pulo extra mas seu pulo fica mais fraco.",
-    'ICEFORM': "{}% de chance de lançar uma bola congelante, que desacelera o alvo por {} segundo(s)".format(round(100*ICE_CHANCE), ICE_TIME//60),
+    'ICEFORM': "{}% de chance de lançar uma bola congelante, que desacelera o alvo por {} segundo(s)".format(round(100*ICE_CHANCE), ICE_TIME/60),
     'ANTIGRAV':'Ataques paralizam por mais tempo e deixam o alvo em gravidade zero por {} segundo(s)'.format(ANTIG_ATK/60),
     'HARDATK':'Ataques causam mais {} ponto(s) de dano'.format(HARDATK)
 }
