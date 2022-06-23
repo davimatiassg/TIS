@@ -24,8 +24,8 @@ HOMI_STATS = {
 'F_rate': HOMI_FRAME_RATES,
 'Spr_offset':HOMI_SPRITE_OFFSET,
 'AtkRange': 5, 
-'atk_delay': 15,
-'dash_time': 30,
+'atk_delay': 12,
+'dash_time': 15,
 'knockback': 1.15
 }
 

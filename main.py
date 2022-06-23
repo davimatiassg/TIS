@@ -993,7 +993,7 @@ Round = 0
 #homi args [8, 12, 16, 16, 32, 20, 32, 8], [0, 15]
 p1char = 'wherewolf'
 p1data = chd.GetCharAtributes(p1char)
-p2char = 'homi'
+p2char = 'wug'
 p2data = chd.GetCharAtributes(p2char)
 
 jogador1 = obj_jogador(250,450,0, p1char, p1data.get('F_rate'), p1data.get('Spr_offset'))
