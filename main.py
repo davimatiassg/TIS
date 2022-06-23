@@ -1004,10 +1004,15 @@ while TITLE:
 podium = pg.image.load('Graphics/Charselect/podium.png').convert_alpha()
 beam_blue = an.Animation('', 10, 'Graphics/Charselect', '', 'podbeamb_')
 beam_red = an.Animation('', 10, 'Graphics/Charselect', '', 'podbeamr_')
-podium = pg.transform.scale(podium, (podium.get_width()/64 *(window_width - rel_width)/8, (window_width - rel_width)/8))
+podium = pg.transform.scale(podium, (int(podium.get_width()/64 *(window_width - rel_width)/8), int((window_width - rel_width)/8) ))
 chars = {}
+chars_move = {}
 for i in chd.CharacterSelection.keys():
-    chars.update({i: pg.image.load('Graphics/Title/Background.png').convert_alpha()})
+    chars.update({i: pg.image.load('Graphics/Charselect/charport/'+  i + '.png').convert_alpha()})
+    chars_move.update({i: an.Animation(i, 10, 'Graphics/Charselect/charport/', '', i +'_')})
+
+p1port = pg.image.load('Graphics/Charselect/p1.png').convert_alpha()
+p2port = pg.image.load('Graphics/Charselect/p2.png').convert_alpha()
 
 
 while INCHARS:
@@ -1017,6 +1022,15 @@ while INCHARS:
     window.blit(podium, (window_width - rel_width/2 -  podium.get_width() - 20,  window_height - rel_height - podium.get_height()))
     camera.draw()
     pg.display.flip()
+    for k in chars.keys():
+        ki = list(chars.keys()).index(k)
+        p1k = 0
+        p2k = 0
+        window.blit(chars.get(k), (8 + rel_width/2 +(ki - 7*(ki//7))*(chars.get(k).get_width()+8), rel_height/2 + 96 + (ki//7)*(chars.get(k).get_height()+8)))
+        window.blit(p1port, (8 + rel_width/2 +(p1k - 7*(p1k//7))*(p1port.get_width()+8), rel_height/2 + 96 + (p1k//7)*(p1port.get_height()+8)))
+        window.blit(p2port, (8 + rel_width/2 +(p2k - 7*(p2k//7))*(p2port.get_width()+8), rel_height/2 + 96 + (p1k//7)*(p2port.get_height()+8)))
+            
+                    
     for eventos in pg.event.get():
         if eventos.type == pg.KEYDOWN or eventos.type == pg.QUIT:
             INCHARS = False
