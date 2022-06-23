@@ -38,7 +38,10 @@ room_height = 900 #720
 rel_width = window_width - room_width
 rel_height = window_height - room_height
 raz = window_width/room_width
-RODANDO = True
+TITLE = True
+INGAME = False
+INCHARS = False
+INMAPS = False
 key = [False,False,False,False]       #lista ulitlizada na movimentação do jogador1
 act = [False, False]                         #lista ulitlizada nos ataques do jogador1
 key2 = [False,False,False,False]     #lista ulitlizada na movimentação do jogador2
@@ -161,8 +164,8 @@ class obj_jogador(object):
 
     def getPlayerInput(self, klist, alist):
         #marcadores de h i t b o x.
-        window.blit(spr_cursor, (self.hit_box.x + camera.x, self.hit_box.y + camera.y))
-        window.blit(spr_cursor, (self.hit_box.x + self.hit_box.width + camera.x, self.hit_box.y + self.hit_box.height+ camera.y))
+        #window.blit(spr_cursor, (self.hit_box.x + camera.x, self.hit_box.y + camera.y))
+        #window.blit(spr_cursor, (self.hit_box.x + self.hit_box.width + camera.x, self.hit_box.y + self.hit_box.height+ camera.y))
         #marcadores de h i t b o x.
         
         if self.unabletime <= 0:
@@ -969,6 +972,60 @@ def escolhendo_cartas(player_):
             cartas_deposito.append(c)
         cartas.clear()
 
+
+
+
+
+
+camera = obj_camera()
+
+t_back = pg.image.load('Graphics/Title/Background.png').convert()
+tbg = pg.transform.scale(t_back,(window_width - rel_width, window_height - rel_height))
+#tit = pg.image.load('Graphics/Title/Title.png').convert()
+t_an = an.Animation('', 16, 'Graphics/Title', '', 'Title_')
+pat = an.Animation('', 10, 'Graphics/Title', '', 'pat_')
+
+
+while TITLE:
+    tf = t_an.play()
+    pt = pat.play()
+    dt = clock.tick(FPS)
+    window.blit(tbg, (rel_width/2, rel_height/2))
+    window.blit(tf, (window.get_width()/2 - tf.get_width()/2, rel_height*3/4))
+    window.blit(pt, (window.get_width()/2 - pt.get_width()/2, window.get_height()*3/4 - pt.get_height()/2))
+    camera.draw()
+    pg.display.flip()
+    for eventos in pg.event.get():
+        if eventos.type == pg.KEYDOWN or eventos.type == pg.QUIT:
+            TITLE = False
+            if eventos.key != pg.K_ESCAPE:
+                INCHARS = True
+
+podium = pg.image.load('Graphics/Charselect/podium.png').convert_alpha()
+beam_blue = an.Animation('', 10, 'Graphics/Charselect', '', 'podbeamb_')
+beam_red = an.Animation('', 10, 'Graphics/Charselect', '', 'podbeamr_')
+podium = pg.transform.scale(podium, (podium.get_width()/64 *(window_width - rel_width)/8, (window_width - rel_width)/8))
+chars = {}
+for i in chd.CharacterSelection.keys():
+    chars.update({i: pg.image.load('Graphics/Title/Background.png').convert_alpha()})
+
+
+while INCHARS:
+    dt = clock.tick(FPS)
+    window.blit(tbg, (rel_width/2, rel_height/2))
+    window.blit(podium, (rel_width/2 + 20,  window_height - rel_height - podium.get_height()))
+    window.blit(podium, (window_width - rel_width/2 -  podium.get_width() - 20,  window_height - rel_height - podium.get_height()))
+    camera.draw()
+    pg.display.flip()
+    for eventos in pg.event.get():
+        if eventos.type == pg.KEYDOWN or eventos.type == pg.QUIT:
+            INCHARS = False
+            if eventos.key != pg.K_ESCAPE:
+                INGAME = True
+            else:
+                quit()
+
+
 #CRIANDO O MAPA
 MAP = 'forest'
 blocos = TileMap(MAP, rel_width, rel_height)
@@ -976,7 +1033,7 @@ bg = pg.transform.scale(pg.image.load('Graphics/background/'+MAP+'.png').convert
 
 #CRIANDO ADEMAIS
 
-camera = obj_camera()
+
 
 efeitos = []
 efeitos_deposito = []
@@ -991,9 +1048,9 @@ Round = 0
 #CRIANDO OS JOGADORES
 #wug args [8, 12, 16, 16, 48, 48, 48, 8], [54, 128]
 #homi args [8, 12, 16, 16, 32, 20, 32, 8], [0, 15]
-p1char = 'wherewolf'
+p1char = 'homi'
 p1data = chd.GetCharAtributes(p1char)
-p2char = 'wug'
+p2char = 'homi'
 p2data = chd.GetCharAtributes(p2char)
 
 jogador1 = obj_jogador(250,450,0, p1char, p1data.get('F_rate'), p1data.get('Spr_offset'))
@@ -1011,9 +1068,20 @@ last_time = time.time()
 
 pg.mouse.set_visible(False)
 
-while RODANDO: #game loop
+
+
+
+
+
+
+            
+            
+            
+
+
+while INGAME: #game loop
     
-    #RODANDO = False
+    #INGAME = False
     dt = clock.tick(FPS) #SETS THE FPS
 
     #dt_ = time.time() - last_time
@@ -1198,7 +1266,7 @@ while RODANDO: #game loop
 
             #Ending Game
             if eventos.key == pg.K_ESCAPE:
-                RODANDO = False
+                INGAME = False
 
         #SOLTOU A TECLA
         if eventos.type == pg.KEYUP:
@@ -1223,7 +1291,7 @@ while RODANDO: #game loop
 
         #FECHOU A JANELA
         if eventos.type == pg.QUIT:
-            RODANDO = False
+            INGAME = False
         
 
 #FIM

@@ -47,7 +47,11 @@ WOLF_STATS = {
 
 
 
-CharacterSelection = {'wherewolf': WOLF_STATS, 'wug': WUG_STATS, 'homi': HOMI_STATS}
+CharacterSelection = {
+'wherewolf': WOLF_STATS, 
+'wug': WUG_STATS, 
+'homi': HOMI_STATS
+}
 
 
 def GetCharAtributes(a):
