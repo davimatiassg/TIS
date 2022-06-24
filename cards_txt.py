@@ -18,10 +18,10 @@ BLEEDING_RATE = 24 #in frames
 BLEEDING_DAMAGE = 0.6
 
 #ATTACK WHILE DASHING
-CARDS_NOTSTACKABLE.append('ATKESQUIVA_INCREASE') #NOT STACKABLE !!!!!!!!!!
+#CARDS_NOTSTACKABLE.append('ATKESQUIVA_INCREASE') #NOT STACKABLE !!!!!!!!!!
 
 #Aumenta o dano do primeiro ataque depois de usar uma esquiva, mas sua esquiva não te deixa invulnerável;
-ATKESQUIVA_INCREASE = 2
+ATKESQUIVA_INCREASE = 1.25
 CARDS_NOTSTACKABLE.append('ATK_WHILE_DASHING') #NOT STACKABLE !!!!!!!!!!
 
 #Dá mais knockback

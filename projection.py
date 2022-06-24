@@ -54,7 +54,7 @@ class Projection(object): #define uma classe projeção
 		if tg != None:
 			k = []
 			k.append(1.35*knockback*math.cos(self.dir*2*math.pi/360))
-			k.append(-knockback*math.sin(self.dir*2*math.pi/360) - knockback/5)
+			k.append(-knockback*math.sin(self.dir*2*math.pi/360) - knockback/3)
 			tg.takeDamage(dmg, k)
 
 	def lifesteal(self, player, dmg, tg = None):

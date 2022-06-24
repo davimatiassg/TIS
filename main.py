@@ -30,6 +30,14 @@ pg.font.SysFont('Comic Sans MS', 30),
 pg.font.SysFont('Comic Sans MS', 45),
 pg.font.SysFont('Comic Sans MS', 20)
 ]
+fnt_superstar = [ # FONT SIZES
+pg.font.Font('superstar.ttf', 25),
+pg.font.Font('superstar.ttf', 30),
+pg.font.Font('superstar.ttf', 35),
+pg.font.Font('superstar.ttf', 30),
+pg.font.Font('superstar.ttf', 45),
+pg.font.Font('superstar.ttf', 20)
+]
 fnt_comicsans_Vspace = [30,40,50,60,70,25]
 
 #VARIAVEIS GLOBAIS
@@ -41,7 +49,7 @@ raz = window_width/room_width
 TITLE = True
 INGAME = False
 INCHARS = False
-INMAPS = False
+INROUNDS = False
 key = [False,False,False,False]       #lista ulitlizada na movimentação do jogador1
 act = [False, False]                         #lista ulitlizada nos ataques do jogador1
 key2 = [False,False,False,False]     #lista ulitlizada na movimentação do jogador2
@@ -143,7 +151,7 @@ class obj_jogador(object):
         self.HAS_FIRE_BALL = False;self.FIRE_BALL_AMMOUNT = 0
         self.APPLIES_BLEEDING = 0; self.APP_BLD_TIME = 0; self.TIME_BLEEDING = 0;self.BLEEDING_DAMAGE = 0
         self.ATK_WHILE_DASHING = False
-        self.ATKESQUIVA = False;self.FIRST_ATK_AFTER_DASH = False
+        self.ATKESQUIVA = False;self.FIRST_ATK_AFTER_DASH = False; self.F_A_MULT = 1
         self.APLIES_MORE_KNOCKBACK = 1
         self.SURVIVAL_ATK_MULTPLIER = 1
         self.SPIKES = False
@@ -198,11 +206,11 @@ class obj_jogador(object):
                     if i == 0 and self.dash_cooldown <= 0:
                         self.hspeed += 1.75*self.last_direction_moved
                         self.dash_cooldown = 45
-                        
+                        self.FIRST_ATK_AFTER_DASH = True
                     if (i == 1 and self.atk_cooldown <= 0) and (abs(self.hspeed) <= self.lower_max_hspeed + 0.1 or self.ATK_WHILE_DASHING == True):
                         self.isAtacking = True
                         self.atk_cooldown = self.atk_delay
-                        self.FIRST_ATK_AFTER_DASH = True
+                        
                         if(random.randint(1,100)/100 < self.FRZ_CHANCE):
                             self.CARDiceball()
                         if(klist[2]):
@@ -229,40 +237,37 @@ class obj_jogador(object):
     def DefaultAtk(self):
         #Normal Attack
 
-        atk_increase_ = 0
+        atk_increase_ = -1 + (self.F_A_MULT)**((self.ATKESQUIVA == True)*(self.FIRST_ATK_AFTER_DASH == True))
 
-        atk_increase_ += (ctxt.ATKESQUIVA_INCREASE)*(self.ATKESQUIVA == True)*(self.FIRST_ATK_AFTER_DASH == True)
-
-        atk_mult = 1*( self.SURVIVAL_ATK_MULTPLIER**(self.Hp/self.maxHp < ctxt.SURVIVAL_MIN_HP) )
-
+        atk_mult = 1*(self.SURVIVAL_ATK_MULTPLIER**(self.Hp/self.maxHp < ctxt.SURVIVAL_MIN_HP) )
+        print( self.Atk*(atk_increase_+1)*atk_mult)
+        self.FIRST_ATK_AFTER_DASH = False
         #atk_args = (self, self.hspeed + self.x + self.hit_box.width*0.2 + self.last_direction_moved*(self.hit_box.width + self.AtkRange),
         #    self.y + self.hit_box.height/5, (90 -(90*self.last_direction_moved)), 0.15, (self.Atk + atk_increase_)*atk_mult, self.knockback*self.APLIES_MORE_KNOCKBACK)
 
         atk_args = (self,self.hit_box.x + self.hit_box.width/2 + self.last_direction_moved*self.AtkRange*15,
-            self.y +self.hit_box.height/4, (90 -(90*self.last_direction_moved)), 0.15, (self.Atk + atk_increase_)*atk_mult, 
+            self.y +self.hit_box.height/4, (90 -(90*self.last_direction_moved)), 0.15, self.Atk*(atk_increase_+1)*atk_mult, 
             self.knockback*self.APLIES_MORE_KNOCKBACK, self.atkSc, self.ATKFX)
 
         efeitos.append(fxd.fxSpawn(self.char, atk_args))
-        self.FIRST_ATK_AFTER_DASH = False
+        
         
     def UpAtk(self):
         #Normal Attack
 
-        atk_increase_ = 0
-
-        atk_increase_ += (ctxt.ATKESQUIVA_INCREASE)*(self.ATKESQUIVA == True)*(self.FIRST_ATK_AFTER_DASH == True)
+        atk_increase_ = -1 + (self.F_A_MULT)**((self.ATKESQUIVA == True)*(self.FIRST_ATK_AFTER_DASH == True))
 
         atk_mult = 1*( self.SURVIVAL_ATK_MULTPLIER**(self.Hp/self.maxHp < ctxt.SURVIVAL_MIN_HP) )
-
+        self.FIRST_ATK_AFTER_DASH = False
         #atk_args = (self, self.hspeed + self.x + self.hit_box.width*0.2 + self.last_direction_moved*(self.hit_box.width + self.AtkRange),
         #    self.y + self.hit_box.height/5, (90 -(90*self.last_direction_moved)), 0.15, (self.Atk + atk_increase_)*atk_mult, self.knockback*self.APLIES_MORE_KNOCKBACK)
 
         atk_args = (self, self.x + self.hit_box.width/2 , self.y - self.hit_box.height*0.5, 90, 0.15, 
-            (self.Atk + atk_increase_)*atk_mult, self.knockback*self.APLIES_MORE_KNOCKBACK, 1.2*self.atkSc, self.ATKFX)
+            self.Atk*(atk_increase_+1)*atk_mult, self.knockback*self.APLIES_MORE_KNOCKBACK, 1.2*self.atkSc, self.ATKFX)
 
         efeitos.append(fxd.fxSpawn(self.char, atk_args))
 
-        self.FIRST_ATK_AFTER_DASH = False
+        
 
     def DownAtk(self):
             if(self.on_ground):
@@ -270,9 +275,7 @@ class obj_jogador(object):
             else:
                 #Normal Attack
 
-                atk_increase_ = 0
-
-                atk_increase_ += (ctxt.ATKESQUIVA_INCREASE)*(self.ATKESQUIVA == True)*(self.FIRST_ATK_AFTER_DASH == True)
+                atk_increase_ = -1 + (self.F_A_MULT)**((self.ATKESQUIVA == True)*(self.FIRST_ATK_AFTER_DASH == True))
 
                 atk_mult = 1*( self.SURVIVAL_ATK_MULTPLIER**(self.Hp/self.maxHp < ctxt.SURVIVAL_MIN_HP) )
 
@@ -280,7 +283,7 @@ class obj_jogador(object):
                 #    self.y + self.hit_box.height/5, (90 -(90*self.last_direction_moved)), 0.15, (self.Atk + atk_increase_)*atk_mult, self.knockback*self.APLIES_MORE_KNOCKBACK)
 
                 atk_args = (self, self.x + self.hit_box.width/2, self.y + self.hit_box.height*1.1, -90, 0.15, 
-                    (self.Atk + atk_increase_)*atk_mult, self.knockback*self.APLIES_MORE_KNOCKBACK, self.atkSc, self.ATKFX)
+                    self.Atk*(atk_increase_+1)*atk_mult, self.knockback*self.APLIES_MORE_KNOCKBACK, self.atkSc, self.ATKFX)
 
                 efeitos.append(fxd.fxSpawn(self.char, atk_args))
 
@@ -332,6 +335,8 @@ class obj_jogador(object):
         self.TIME_BLEEDING = 0
         self.ANTIG_TIME = 0
         self.SLOW_TIME = 0
+        for i in efeitos:
+            efeitos.remove(i)
 
     def getCollisions(self, tiles):
         hits = []
@@ -604,7 +609,7 @@ class obj_jogador(object):
                 for k in self.activeCards:
                     ki = self.activeCards.index(k)
                     window.blit(k[1], (8 + rel_width/2 +(ki - 7*(ki//7))*(k[1].get_width()+8), rel_height/2 + 96 + (ki//7)*(k[1].get_height()+8)))
-                    draw_text(str(k[2]), 16 + rel_width/2 + (ki - 7*(ki//7))*(k[1].get_width()+8) , rel_height/2 + 104 + (ki//7)*(k[1].get_height()+8),font_ = fnt_comicsans[5],color_ = WHITE)
+                    draw_text(str(k[2]), 16 + rel_width/2 + (ki - 7*(ki//7))*(k[1].get_width()+8) , rel_height/2 + 104 + (ki//7)*(k[1].get_height()+8),font_ = fnt_superstar[5],color_ = WHITE)
             if self.player_ == 1:
                 draw_rectangle(rel_width/2 + room_width - 500,rel_height/2,
                 rel_width/2 + room_width,rel_height/2 + 80,(0,100,0))
@@ -616,7 +621,7 @@ class obj_jogador(object):
                     ki = self.activeCards.index(k)
 
                     window.blit(k[1], (rel_width/2 + room_width -(ki - 7*(ki//7))*(k[1].get_width()+8)-72, rel_height/2 + 96 + (ki//7)*(k[1].get_height()+8)))
-                    draw_text(str(k[2]), rel_width/2 +  room_width -64 - (ki - 7*(ki//7)) *(k[1].get_width()+8), rel_height/2 + 104 + (ki//7)*(k[1].get_height()+8),font_ = fnt_comicsans[5],color_ = WHITE)
+                    draw_text(str(k[2]), rel_width/2 +  room_width -64 - (ki - 7*(ki//7)) *(k[1].get_width()+8), rel_height/2 + 104 + (ki//7)*(k[1].get_height()+8),font_ = fnt_superstar[5],color_ = WHITE)
 
 class obj_bloco(object):
     def __init__(self,spr,x,y):
@@ -711,7 +716,7 @@ class carta(object):
 
         draw_text(self.txt,self.x + sc_*self.card_sprite.get_width()/2,
         self.y + sc_*self.card_sprite.get_height()*3/5,
-        color_ = BRIGHT_YELLOW, font_ = fnt_comicsans[fnt_sc], centered_ = True, sc_ = sc_)
+        color_ = BRIGHT_YELLOW, font_ = fnt_superstar[fnt_sc], centered_ = True, sc_ = sc_)
 
 class effect(object):
     def __init__(self,spr,x,y,alive_time,
@@ -745,7 +750,7 @@ class effect(object):
         else:
             window.blit(self.sprite, (self.x + camera.x, self.y + camera.y))
 
-def draw_text(txt_,x_,y_,font_ = fnt_comicsans[4],color_ = WHITE,centered_ = True, sc_ = 1):
+def draw_text(txt_,x_,y_,font_ = fnt_superstar[4],color_ = WHITE,centered_ = True, sc_ = 1):
     #if "\n" in txt_:
 
         #IT HAS LINE BREAKS; (╯°□°)╯︵ ┻━┻
@@ -786,11 +791,11 @@ def draw_text(txt_,x_,y_,font_ = fnt_comicsans[4],color_ = WHITE,centered_ = Tru
         f_str_.append(pg.transform.scale(f, (f.get_width()*sc_, f.get_height()*sc_)))
         #print("string final= " + str_)
         for j in range(len(f_str_)):
-            window.blit(f_str_[j],(x_ - f_str_[j].get_width()/2, y_ - f_str_[j].get_height()/2 + fnt_comicsans_Vspace[fnt_comicsans.index(font_)]*(j)*sc_ ))
+            window.blit(f_str_[j],(x_ - f_str_[j].get_width()/2, y_ - f_str_[j].get_height()/2 + fnt_comicsans_Vspace[fnt_superstar.index(font_)]*(j)*sc_ ))
         '''
         for j in range(len(f_str_)-1):
             window.blit(f_str_[j],(x_,y_ + fnt_comicsans_Vspace[fnt_comicsans.index(font_)]*j))
-            if txt_[i] == \n or i == len(txt_) - 1 or i >= len(line_text_size)-1:
+            if txt_[i] ==  or i == len(txt_) - 1 or i >= len(line_text_size)-1:
                 if i == len(txt_) - 1: 
                     str_ += txt_[i]
 
@@ -915,6 +920,7 @@ def apply_card_effect(player_,card_):
         player_.ATK_WHILE_DASHING = True
     if card_.tipo_ == "ATKESQUIVA":
         player_.ATKESQUIVA = True
+        player_.F_A_MULT *= ctxt.ATKESQUIVA_INCREASE
     if card_.tipo_ == "APLIES_MORE_KNOCKBACK":
         player_.APLIES_MORE_KNOCKBACK *= ctxt.APLIES_MORE_KNOCKBACK
     if card_.tipo_ == "RECEIVES_LESS_KNOCKBACK":
@@ -1011,6 +1017,8 @@ for i in chd.CharacterSelection.keys():
     chars.update({i: pg.transform.scale(pg.image.load('Graphics/Charselect/charport/'+  i + '.png').convert_alpha(), (128, 128))})
     chars_move.update({i: an.Animation(i, 16, 'Graphics/Charselect/charport/', '', i +'_')})
 
+p1char = ''
+p2char = ''
 p1port = pg.transform.scale(pg.image.load('Graphics/Charselect/p1.png').convert_alpha(),  (128, 128))
 p2port = pg.transform.scale(pg.image.load('Graphics/Charselect/p2.png').convert_alpha(),  (128, 128))
 p1k = 0
@@ -1020,6 +1028,9 @@ fst_portrait_pos_y = window_height - rel_height - podium.get_height()
 p1txt = "'r' para escolher"
 p2txt = "'2' para escolher"
 lchar = list(chars.keys())
+prscp = pg.image.load('Graphics/Charselect/presspc.png').convert_alpha()
+
+
 while INCHARS:
     bb = beam_blue.play()
     br = beam_red.play()
@@ -1027,9 +1038,11 @@ while INCHARS:
     window.blit(tbg, (rel_width/2, rel_height/2))
     window.blit(podium, (rel_width/2 + 20,  window_height - rel_height - podium.get_height()))
     window.blit(bb, (rel_width/2 + 20 + abs(podium.get_width()-bb.get_width())/2,  window_height - rel_height*3/4 - podium.get_height() - bb.get_height()))
-
     window.blit(podium, (window_width - rel_width/2 -  podium.get_width() - 20,  window_height - rel_height - podium.get_height()))
     window.blit(pg.transform.flip(br, True, False), (window_width -20 - rel_width/2 -  podium.get_width() + (podium.get_width()-br.get_width())/2,  window_height - rel_height*3/4 - podium.get_height() -br.get_height()))
+    if(p1char != '' and p2char != ''):
+        window.blit(prscp, (window.get_width()/2 - prscp.get_width()/2, rel_height*3/4))
+
     camera.draw()
     
     for k in chars.keys():
@@ -1042,7 +1055,7 @@ while INCHARS:
 
     draw_text(p1txt, rel_width/2 + 20 + podium.get_width()/2,  window_height - rel_height - podium.get_height()/3, color_ = BLACK)
     draw_text(p2txt, window_width - rel_width/2 -  podium.get_width()/2 - 20, window_height - rel_height - podium.get_height()/3, color_ = BLACK)
-    pg.display.flip()                   
+                       
     for eventos in pg.event.get():
         if eventos.type == pg.KEYDOWN:
             if eventos.key != pg.K_ESCAPE:
@@ -1063,10 +1076,32 @@ while INCHARS:
                     p2char = lchar[p2k]
                     p2txt = lchar[p2k]
                     beam_red = chars_move.get(lchar[p2k])
-                #INGAME = True
-            else:
-                INCHARS = False
 
+                if eventos.key == pg.K_SPACE:
+                    if(p1char != '' and p2char != ''):
+                        INCHARS = False
+                        INROUNDS = True
+                #INGAME = True
+                
+    pg.display.flip()
+
+MAXROUNDS = 1
+while INROUNDS:
+    window.blit(tbg, (rel_width/2, rel_height/2))
+    draw_text('Número máximo de Rounds:', window_width*2/5, window_height/2, color_ = WHITE, sc_ = 3)
+    draw_text(MAXROUNDS, window_width/2, window_height/2, color_ = WHITE, sc_ = 3)
+    draw_text('Espaço para confirmar', window_width*4/5 , window_height/2, color_ = WHITE, sc_ = 2)
+    for eventos in pg.event.get():
+        if eventos.type == pg.KEYDOWN:
+            if eventos.key == pg.K_a or eventos.key == pg.K_LEFT:
+                MAXROUNDS = fs.clamp(MAXROUNDS-2, 1, 19)
+            elif eventos.key == pg.K_d or eventos.key == pg.K_RIGHT:
+                MAXROUNDS = fs.clamp(MAXROUNDS+2, 1, 19)
+            elif eventos.key == pg.K_SPACE:
+                INROUNDS = False
+                INGAME = True
+
+    pg.display.flip()
 #CRIANDO O MAPA
 MAP = 'forest'
 blocos = TileMap(MAP, rel_width, rel_height)
@@ -1089,9 +1124,9 @@ Round = 0
 #CRIANDO OS JOGADORES
 #wug args [8, 12, 16, 16, 48, 48, 48, 8], [54, 128]
 #homi args [8, 12, 16, 16, 32, 20, 32, 8], [0, 15]
-p1char = 'homi'
+
 p1data = chd.GetCharAtributes(p1char)
-p2char = 'homi'
+
 p2data = chd.GetCharAtributes(p2char)
 
 jogador1 = obj_jogador(250,450,0, p1char, p1data.get('F_rate'), p1data.get('Spr_offset'))
@@ -1136,10 +1171,10 @@ while INGAME: #game loop
     #pg.display.set_caption("{}".format(clock.get_fps())) #mostra o fps no título da tela
     #print(clock.get_fps())
 
-    draw_text("ROUND " + str(Round),rel_width/2 + room_width/2,rel_height/2 + 64,color_ = (255,0,0))
-    draw_text(str(points[0]) + " | " + str(points[1]),rel_width/2 + room_width/2,rel_height/2 + 130,color_ = (255,0,0))
+    draw_text("ROUND " + str(Round),rel_width/2 + room_width/2,rel_height/2 + 64,color_ = (0,255,0))
+    draw_text(str(points[0]) + " | " + str(points[1]),rel_width/2 + room_width/2,rel_height/2 + 130,color_ = (0,255,0))
 
-    draw_text(str(int(clock.get_fps()*100)/100),rel_width/2 + room_width/2,rel_height/2 + 190,color_ = (255,0,0),font_ = fnt_comicsans[1])
+    #draw_text(str(int(clock.get_fps()*100)/100),rel_width/2 + room_width/2,rel_height/2 + 190,color_ = (0,255,0),font_ = fnt_comicsans[1])
 
     #---CODIGO DO JOGADOR
     jogador1.getPlayerInput(key, act)                   #Função para realizar o controle do jogador 1 com base nas inputs do teclado
