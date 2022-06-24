@@ -38,7 +38,9 @@ pg.font.Font('superstar.ttf', 30),
 pg.font.Font('superstar.ttf', 45),
 pg.font.Font('superstar.ttf', 20)
 ]
+
 fnt_comicsans_Vspace = [30,40,50,60,70,25]
+fnt_superstar_Vspace = [25,30,35,30,45,20]
 
 #VARIAVEIS GLOBAIS
 room_width = 1600 #1280
@@ -791,7 +793,7 @@ def draw_text(txt_,x_,y_,font_ = fnt_superstar[4],color_ = WHITE,centered_ = Tru
         f_str_.append(pg.transform.scale(f, (f.get_width()*sc_, f.get_height()*sc_)))
         #print("string final= " + str_)
         for j in range(len(f_str_)):
-            window.blit(f_str_[j],(x_ - f_str_[j].get_width()/2, y_ - f_str_[j].get_height()/2 + fnt_comicsans_Vspace[fnt_superstar.index(font_)]*(j)*sc_ ))
+            window.blit(f_str_[j],(x_ - f_str_[j].get_width()/2, y_ - f_str_[j].get_height()/2 + fnt_superstar_Vspace[fnt_superstar.index(font_)]*(j)*sc_ ))
         '''
         for j in range(len(f_str_)-1):
             window.blit(f_str_[j],(x_,y_ + fnt_comicsans_Vspace[fnt_comicsans.index(font_)]*j))
@@ -1088,9 +1090,9 @@ while INCHARS:
 MAXROUNDS = 1
 while INROUNDS:
     window.blit(tbg, (rel_width/2, rel_height/2))
-    draw_text('Número máximo de Rounds:', window_width*2/5, window_height/2, color_ = WHITE, sc_ = 3)
-    draw_text(MAXROUNDS, window_width/2, window_height/2, color_ = WHITE, sc_ = 3)
-    draw_text('Espaço para confirmar', window_width*4/5 , window_height/2, color_ = WHITE, sc_ = 2)
+    draw_text('Número máximo de Rounds:', window_width/2, window_height*1/5, color_ = WHITE, sc_ = 2)
+    draw_text(str(MAXROUNDS), window_width/2, window_height/2, color_ = WHITE, sc_ = 3)
+    draw_text('Espaço para confirmar', window_width/2 , window_height*3/5, color_ = WHITE, sc_ = 2)
     for eventos in pg.event.get():
         if eventos.type == pg.KEYDOWN:
             if eventos.key == pg.K_a or eventos.key == pg.K_LEFT:
