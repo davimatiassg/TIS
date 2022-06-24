@@ -557,8 +557,8 @@ class obj_jogador(object):
             for i in efeitos:
                 efeitos.remove(i)
             if(VICTORY_DELAY <= 0):
-                Round += 1
                 points[self.enemy.player_] += 1
+                Round += 1
                 jogador1.restart()
                 jogador2.restart()
                 spawn_cards()
@@ -1160,7 +1160,9 @@ while PLAY:
 
 
     while INGAME: #game loop
-        
+        if(Round > MAXROUNDS):
+            INVICTORY = True
+            INGAME = False
         #INGAME = False
         dt = clock.tick(FPS) #SETS THE FPS
 
@@ -1365,9 +1367,6 @@ while PLAY:
                 INGAME = False
                 PLAY = False
 
-        if(Round >= MAXROUNDS and VICTORY_DELAY <= 0):
-            INVICTORY = True
-            INGAME = False
 
     winnerstr = 'Vitória do Jogador 1!!!'
     winAN = chars_move.get(p1char) 
@@ -1378,6 +1377,8 @@ while PLAY:
         winnerstr = 'Ué... deu empate?'
         winAN = an.Animation('', 10, 'Graphics/Charselect', '', 'podbeamb_')
 
+    print(points)
+
     while INVICTORY:
         dt = clock.tick(FPS)
         window.blit(tbg, (rel_width/2, rel_height/2))
@@ -1385,6 +1386,8 @@ while PLAY:
         window.blit(podium, (window_width/2 - podium.get_width()/2,  window_height/2 + podium.get_height()))
         window.blit(winAN.play(), (window_width/2 - winAN.play().get_width()/2, window_height/2))
         camera.draw()
+        points = [0,0]
+        Round = 1
         pg.display.flip()
         for eventos in pg.event.get():
             if eventos.type == pg.KEYDOWN:
