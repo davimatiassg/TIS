@@ -549,7 +549,7 @@ class obj_jogador(object):
 
 
         else: #Player Has Died
-            points[self.enemy.player_] += 1
+            
             global Round
             global vez
             global VICTORY_DELAY
@@ -558,6 +558,7 @@ class obj_jogador(object):
                 efeitos.remove(i)
             if(VICTORY_DELAY <= 0):
                 Round += 1
+                points[self.enemy.player_] += 1
                 jogador1.restart()
                 jogador2.restart()
                 spawn_cards()
@@ -1364,7 +1365,7 @@ while PLAY:
                 INGAME = False
                 PLAY = False
 
-        if(Round > MAXROUNDS and VICTORY_DELAY <= 0):
+        if(Round >= MAXROUNDS and VICTORY_DELAY <= 0):
             INVICTORY = True
             INGAME = False
 
