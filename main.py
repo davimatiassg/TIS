@@ -48,10 +48,12 @@ room_height = 900 #720
 rel_width = window_width - room_width
 rel_height = window_height - room_height
 raz = window_width/room_width
+PLAY = True
 TITLE = True
 INGAME = False
 INCHARS = False
 INROUNDS = False
+INVICTORY = False
 key = [False,False,False,False]       #lista ulitlizada na movimentação do jogador1
 act = [False, False]                         #lista ulitlizada nos ataques do jogador1
 key2 = [False,False,False,False]     #lista ulitlizada na movimentação do jogador2
@@ -67,6 +69,8 @@ BLUE = (0  ,0  ,255  )
 BRIGHT_YELLOW = (250, 250, 135)
 line_text_size = "abcdefghijklmnopqrs"
 VOLUME_DO_JOGO = 1 # 0 a 1
+VICTORY_DELAY = 80
+oneplayerdead = False
 
 LISTA_DE_CARTAS = []
 USED_CARDS = []
@@ -242,7 +246,6 @@ class obj_jogador(object):
         atk_increase_ = -1 + (self.F_A_MULT)**((self.ATKESQUIVA == True)*(self.FIRST_ATK_AFTER_DASH == True))
 
         atk_mult = 1*(self.SURVIVAL_ATK_MULTPLIER**(self.Hp/self.maxHp < ctxt.SURVIVAL_MIN_HP) )
-        print( self.Atk*(atk_increase_+1)*atk_mult)
         self.FIRST_ATK_AFTER_DASH = False
         #atk_args = (self, self.hspeed + self.x + self.hit_box.width*0.2 + self.last_direction_moved*(self.hit_box.width + self.AtkRange),
         #    self.y + self.hit_box.height/5, (90 -(90*self.last_direction_moved)), 0.15, (self.Atk + atk_increase_)*atk_mult, self.knockback*self.APLIES_MORE_KNOCKBACK)
@@ -337,8 +340,7 @@ class obj_jogador(object):
         self.TIME_BLEEDING = 0
         self.ANTIG_TIME = 0
         self.SLOW_TIME = 0
-        for i in efeitos:
-            efeitos.remove(i)
+
 
     def getCollisions(self, tiles):
         hits = []
@@ -550,11 +552,18 @@ class obj_jogador(object):
             points[self.enemy.player_] += 1
             global Round
             global vez
-            Round += 1
+            global VICTORY_DELAY
             vez = [self.player_,self.enemy.player_]
-            jogador1.restart()
-            jogador2.restart()
-            spawn_cards()
+            for i in efeitos:
+                efeitos.remove(i)
+            if(VICTORY_DELAY <= 0):
+                Round += 1
+                jogador1.restart()
+                jogador2.restart()
+                spawn_cards()
+                VICTORY_DELAY = 80
+            else:
+                VICTORY_DELAY -= 1
 
     def draw(self): #função que desenha o jogador na tela
         if self.Hp > 0:
@@ -993,383 +1002,394 @@ tbg = pg.transform.scale(t_back,(window_width - rel_width, window_height - rel_h
 t_an = an.Animation('', 16, 'Graphics/Title', '', 'Title_')
 pat = an.Animation('', 10, 'Graphics/Title', '', 'pat_')
 
+while PLAY:
 
-while TITLE:
-    tf = t_an.play()
-    pt = pat.play()
-    dt = clock.tick(FPS)
-    window.blit(tbg, (rel_width/2, rel_height/2))
-    window.blit(tf, (window.get_width()/2 - tf.get_width()/2, rel_height*3/4))
-    window.blit(pt, (window.get_width()/2 - pt.get_width()/2, window.get_height()*3/4 - pt.get_height()/2))
-    camera.draw()
-    pg.display.flip()
-    for eventos in pg.event.get():
-        if eventos.type == pg.KEYDOWN or eventos.type == pg.QUIT:
-            TITLE = False
-            if eventos.key != pg.K_ESCAPE:
-                INCHARS = True
+    while TITLE:
+        tf = t_an.play()
+        pt = pat.play()
+        dt = clock.tick(FPS)
+        window.blit(tbg, (rel_width/2, rel_height/2))
+        window.blit(tf, (window.get_width()/2 - tf.get_width()/2, rel_height*3/4))
+        window.blit(pt, (window.get_width()/2 - pt.get_width()/2, window.get_height()*3/4 - pt.get_height()/2))
+        camera.draw()
+        pg.display.flip()
+        for eventos in pg.event.get():
+            if eventos.type == pg.KEYDOWN or eventos.type == pg.QUIT:
+                TITLE = False
+                if eventos.key != pg.K_ESCAPE:
+                    INCHARS = True
 
-podium = pg.image.load('Graphics/Charselect/podium.png').convert_alpha()
-beam_blue = an.Animation('', 10, 'Graphics/Charselect', '', 'podbeamb_')
-beam_red = an.Animation('', 10, 'Graphics/Charselect', '', 'podbeamr_')
-podium = pg.transform.scale(podium, (int(podium.get_width()/64 *(window_width - rel_width)/8), int((window_width - rel_width)/8) ))
-chars = {}
-chars_move = {}
-for i in chd.CharacterSelection.keys():
-    chars.update({i: pg.transform.scale(pg.image.load('Graphics/Charselect/charport/'+  i + '.png').convert_alpha(), (128, 128))})
-    chars_move.update({i: an.Animation(i, 16, 'Graphics/Charselect/charport/', '', i +'_')})
+    podium = pg.image.load('Graphics/Charselect/podium.png').convert_alpha()
+    beam_blue = an.Animation('', 10, 'Graphics/Charselect', '', 'podbeamb_')
+    beam_red = an.Animation('', 10, 'Graphics/Charselect', '', 'podbeamr_')
+    podium = pg.transform.scale(podium, (int(podium.get_width()/64 *(window_width - rel_width)/8), int((window_width - rel_width)/8) ))
+    chars = {}
+    chars_move = {}
+    for i in chd.CharacterSelection.keys():
+        chars.update({i: pg.transform.scale(pg.image.load('Graphics/Charselect/charport/'+  i + '.png').convert_alpha(), (128, 128))})
+        chars_move.update({i: an.Animation(i, 16, 'Graphics/Charselect/charport/', '', i +'_')})
 
-p1char = ''
-p2char = ''
-p1port = pg.transform.scale(pg.image.load('Graphics/Charselect/p1.png').convert_alpha(),  (128, 128))
-p2port = pg.transform.scale(pg.image.load('Graphics/Charselect/p2.png').convert_alpha(),  (128, 128))
-p1k = 0
-p2k = 0
-fst_portrait_pos_x = window_width/2 - (chars.get('homi').get_width()+8)*len(chars)/2
-fst_portrait_pos_y = window_height - rel_height - podium.get_height()
-p1txt = "'r' para escolher"
-p2txt = "'2' para escolher"
-lchar = list(chars.keys())
-prscp = pg.image.load('Graphics/Charselect/presspc.png').convert_alpha()
+    p1char = ''
+    p2char = ''
+    p1port = pg.transform.scale(pg.image.load('Graphics/Charselect/p1.png').convert_alpha(),  (128, 128))
+    p2port = pg.transform.scale(pg.image.load('Graphics/Charselect/p2.png').convert_alpha(),  (128, 128))
+    p1k = 0
+    p2k = 0
+    fst_portrait_pos_x = window_width/2 - (chars.get('homi').get_width()+8)*len(chars)/2
+    fst_portrait_pos_y = window_height - rel_height - podium.get_height()
+    p1txt = "'r' para escolher"
+    p2txt = "'2' para escolher"
+    lchar = list(chars.keys())
+    prscp = pg.image.load('Graphics/Charselect/presspc.png').convert_alpha()
 
 
-while INCHARS:
-    bb = beam_blue.play()
-    br = beam_red.play()
-    dt = clock.tick(FPS)
-    window.blit(tbg, (rel_width/2, rel_height/2))
-    window.blit(podium, (rel_width/2 + 20,  window_height - rel_height - podium.get_height()))
-    window.blit(bb, (rel_width/2 + 20 + abs(podium.get_width()-bb.get_width())/2,  window_height - rel_height*3/4 - podium.get_height() - bb.get_height()))
-    window.blit(podium, (window_width - rel_width/2 -  podium.get_width() - 20,  window_height - rel_height - podium.get_height()))
-    window.blit(pg.transform.flip(br, True, False), (window_width -20 - rel_width/2 -  podium.get_width() + (podium.get_width()-br.get_width())/2,  window_height - rel_height*3/4 - podium.get_height() -br.get_height()))
-    if(p1char != '' and p2char != ''):
-        window.blit(prscp, (window.get_width()/2 - prscp.get_width()/2, rel_height*3/4))
+    while INCHARS:
+        bb = beam_blue.play()
+        br = beam_red.play()
+        dt = clock.tick(FPS)
+        window.blit(tbg, (rel_width/2, rel_height/2))
+        window.blit(podium, (rel_width/2 + 20,  window_height - rel_height - podium.get_height()))
+        window.blit(bb, (rel_width/2 + 20 + abs(podium.get_width()-bb.get_width())/2,  window_height - rel_height*3/4 - podium.get_height() - bb.get_height()))
+        window.blit(podium, (window_width - rel_width/2 -  podium.get_width() - 20,  window_height - rel_height - podium.get_height()))
+        window.blit(pg.transform.flip(br, True, False), (window_width -20 - rel_width/2 -  podium.get_width() + (podium.get_width()-br.get_width())/2,  window_height - rel_height*3/4 - podium.get_height() -br.get_height()))
+        if(p1char != '' and p2char != ''):
+            window.blit(prscp, (window.get_width()/2 - prscp.get_width()/2, rel_height*3/4))
 
-    camera.draw()
-    
-    for k in chars.keys():
-        ki = lchar.index(k)
-        #8 + rel_width/2 +(ki - 7*(ki//7))*(chars.get(k).get_width()+8), rel_height/2 + 96 + (ki//7)*(chars.get(k).get_height()+8))
-        window.blit(chars.get(k), (fst_portrait_pos_x + ki*(chars.get(k).get_width()+8), fst_portrait_pos_y + (ki//5)*(chars.get(k).get_width()+8)))
-    
-    window.blit(p1port, (fst_portrait_pos_x + p1k*(p1port.get_width()+8), fst_portrait_pos_y + (p1k//5)*(p1port.get_width()+8)))
-    window.blit(p2port, (fst_portrait_pos_x + p2k*(p2port.get_width()+8), fst_portrait_pos_y + (p2k//5)*(p2port.get_width()+8)))
+        camera.draw()
+        
+        for k in chars.keys():
+            ki = lchar.index(k)
+            #8 + rel_width/2 +(ki - 7*(ki//7))*(chars.get(k).get_width()+8), rel_height/2 + 96 + (ki//7)*(chars.get(k).get_height()+8))
+            window.blit(chars.get(k), (fst_portrait_pos_x + ki*(chars.get(k).get_width()+8), fst_portrait_pos_y + (ki//5)*(chars.get(k).get_width()+8)))
+        
+        window.blit(p1port, (fst_portrait_pos_x + p1k*(p1port.get_width()+8), fst_portrait_pos_y + (p1k//5)*(p1port.get_width()+8)))
+        window.blit(p2port, (fst_portrait_pos_x + p2k*(p2port.get_width()+8), fst_portrait_pos_y + (p2k//5)*(p2port.get_width()+8)))
 
-    draw_text(p1txt, rel_width/2 + 20 + podium.get_width()/2,  window_height - rel_height - podium.get_height()/3, color_ = BLACK)
-    draw_text(p2txt, window_width - rel_width/2 -  podium.get_width()/2 - 20, window_height - rel_height - podium.get_height()/3, color_ = BLACK)
-                       
-    for eventos in pg.event.get():
-        if eventos.type == pg.KEYDOWN:
-            if eventos.key != pg.K_ESCAPE:
+        draw_text(p1txt, rel_width/2 + 20 + podium.get_width()/2,  window_height - rel_height - podium.get_height()/3, color_ = BLACK)
+        draw_text(p2txt, window_width - rel_width/2 -  podium.get_width()/2 - 20, window_height - rel_height - podium.get_height()/3, color_ = BLACK)
+                           
+        for eventos in pg.event.get():
+            if eventos.type == pg.KEYDOWN:
+                if eventos.key != pg.K_ESCAPE:
+                    if eventos.key == pg.K_a:
+                        p1k = fs.clamp(p1k-1, 0, len(chars)-1)
+                    if eventos.key == pg.K_d:
+                        p1k = fs.clamp(p1k+1, 0, len(chars)-1)
+                    if eventos.key == pg.K_r:
+                        p1char = lchar[p1k]
+                        p1txt = lchar[p1k]
+                        beam_blue = chars_move.get(lchar[p1k])
+
+                    if eventos.key == pg.K_LEFT:
+                        p2k = fs.clamp(p2k-1, 0, len(chars)-1)
+                    if eventos.key == pg.K_RIGHT:
+                        p2k = fs.clamp(p2k+1, 0, len(chars)-1)
+                    if eventos.key == pg.K_KP2:
+                        p2char = lchar[p2k]
+                        p2txt = lchar[p2k]
+                        beam_red = chars_move.get(lchar[p2k])
+
+                    if eventos.key == pg.K_SPACE:
+                        if(p1char != '' and p2char != ''):
+                            INCHARS = False
+                            INROUNDS = True
+                    #INGAME = True
+                    
+        pg.display.flip()
+
+    MAXROUNDS = 7
+    while INROUNDS:
+        window.blit(tbg, (rel_width/2, rel_height/2))
+        draw_text('Número máximo de Rounds:', window_width/2, window_height*1/5, color_ = WHITE, sc_ = 2)
+        draw_text(str(MAXROUNDS), window_width/2, window_height/2, color_ = WHITE, sc_ = 3)
+        draw_text('Espaço para confirmar', window_width/2 , window_height*3/5, color_ = WHITE, sc_ = 2)
+        for eventos in pg.event.get():
+            if eventos.type == pg.KEYDOWN:
+                if eventos.key == pg.K_a or eventos.key == pg.K_LEFT:
+                    MAXROUNDS = fs.clamp(MAXROUNDS-2, 1, 19)
+                elif eventos.key == pg.K_d or eventos.key == pg.K_RIGHT:
+                    MAXROUNDS = fs.clamp(MAXROUNDS+2, 1, 19)
+                elif eventos.key == pg.K_SPACE:
+                    INROUNDS = False
+                    INGAME = True
+
+        pg.display.flip()
+    #CRIANDO O MAPA
+    MAP = 'forest'
+    blocos = TileMap(MAP, rel_width, rel_height)
+    bg = pg.transform.scale(pg.image.load('Graphics/background/'+MAP+'.png').convert(),(window_width - rel_width - 64, window_height - rel_height-64))
+
+    #CRIANDO ADEMAIS
+
+
+
+    efeitos = []
+    efeitos_deposito = []
+    cartas = []
+    cartas_deposito = []
+    spawn_cards() #COMENTE E DESCOMENTE PARA SPAWNAR AS CARTAS
+    card_selected = 0
+    vez = [0,1] #lista que armazena a ordem de escolha de cartas
+    points = [0,0]
+    Round = 1
+
+    #CRIANDO OS JOGADORES
+    #wug args [8, 12, 16, 16, 48, 48, 48, 8], [54, 128]
+    #homi args [8, 12, 16, 16, 32, 20, 32, 8], [0, 15]
+
+    p1data = chd.GetCharAtributes(p1char)
+
+    p2data = chd.GetCharAtributes(p2char)
+
+    jogador1 = obj_jogador(250,450,0, p1char, p1data.get('F_rate'), p1data.get('Spr_offset'))
+    jogador2 = obj_jogador(room_width - 250,450,1, p2char, p2data.get('F_rate'), p2data.get('Spr_offset'))
+    jogador1.getStats(p1data)
+    jogador2.getStats(p2data)
+    playerList = [jogador1, jogador2]
+    jogador1.enemy = jogador2
+    jogador2.enemy = jogador1
+
+    dash = False;attack = False
+    dash2 = False;attack2 = False
+
+    last_time = time.time()
+
+    pg.mouse.set_visible(False)
+
+
+
+    while INGAME: #game loop
+        
+        #INGAME = False
+        dt = clock.tick(FPS) #SETS THE FPS
+
+        #dt_ = time.time() - last_time
+        #last_time = time.time()
+
+        window.fill((25, 25, 25)) #fundo da tela fica cinza escuro
+        window.blit(bg, (rel_width/2 + 32, rel_height/2 + 60)) #fundo da tela fica cinza escuro
+        window.blit(*(blocos.draw_map_mesh(window, rel_width/2, rel_height/2)))
+        #draw_text(str(int(200*dt_)/200),rel_width/2 + room_width/2,rel_height/2 + 230,color_ = (255,0,0))
+
+        #pg.display.set_caption("{}".format(clock.get_fps())) #mostra o fps no título da tela
+        #print(clock.get_fps())
+
+        draw_text("ROUND " + str(Round),rel_width/2 + room_width/2,rel_height/2 +32,color_ = WHITE)
+        draw_text(str(points[0]) + " | " + str(points[1]),rel_width/2 + room_width/2,rel_height/2 + 64,color_ = WHITE)
+
+        #draw_text(str(int(clock.get_fps()*100)/100),rel_width/2 + room_width/2,rel_height/2 + 190,color_ = (0,255,0),font_ = fnt_comicsans[1])
+
+        #---CODIGO DO JOGADOR
+        jogador1.getPlayerInput(key, act)                   #Função para realizar o controle do jogador 1 com base nas inputs do teclado
+        jogador1.step()                                     #Função de cógido geral "step" do jogador1
+        jogador1.draw()                                     #Função de desenhar do jogador1
+
+        jogador2.getPlayerInput(key2, act2)                 #Função para realizar o controle do jogador 2 com base nas inputs do teclado
+        jogador2.step()                                     #Função de cógido geral "step" do jogador2
+        jogador2.draw()                                     #Função de desenhar do jogador2
+
+
+        if act[0] == True:
+            #Joga o player horizontalmente pra ultima direção que ele se moveu
+            dir_ = 180*(jogador1.hspeed > 0)
+
+            #Dexa um trail pra trás
+            #create_effect(jogador1.anim.getCurrentFrame(),jogador1.x,jogador1.y,
+            #8,speed_ = 10,direction_ = dir_)
+
+            #create_effect(jogador1.anim.getCurrentFrame(),jogador1.x + 10*fs.sign(jogador1.hspeed),jogador1.y,
+            #8,speed_ = 9,direction_ = dir_)
+
+            #create_effect(jogador1.anim.getCurrentFrame(),jogador1.x + 20*fs.sign(jogador1.hspeed),jogador1.y,
+            #8,speed_ = 8,direction_ = dir_)
+
+            #Só vai poder usar o dash dnv dps de um tempinho :(
+
+            act[0] = False
+            jogador1.dash_cooldown = jogador1.dash_time
+            dash = False
+
+
+        if act2[0] == True:
+            #Joga o player horizontalmente pra ultima direção que ele se moveu
+            dir_ = 180*(jogador2.hspeed > 0)
+
+            #Dexa um trail pra trás
+            #create_effect(jogador2.anim.getCurrentFrame(),jogador2.x,jogador2.y,
+            #8,speed_ = 10,direction_ = dir_)
+
+            #create_effect(jogador2.anim.getCurrentFrame(),jogador2.x + 10*fs.sign(jogador2.hspeed),jogador2.y,
+            #8,speed_ = 9,direction_ = dir_)
+
+            #create_effect(jogador2.anim.getCurrentFrame(),jogador2.x + 20*fs.sign(jogador2.hspeed),jogador2.y,
+            #8,speed_ = 8,direction_ = dir_)
+            #Só vai poder usar o dash dnv dps de um tempinho :(
+
+            act2[0] = False
+
+
+        if act[1] == True:
+            act[1] = False
+
+
+        if act2[1] == True:
+            act2[1] = False
+
+            jogador2.dash_cooldown = jogador2.dash_time
+            dash2 = False
+
+
+
+        #---CODIGO DOS BLOCOS
+        #Função de desenhar do bloco
+
+        #---CODIGOS ALEATORIOS
+        for f in efeitos:
+            #Função de cógido geral "step" do efeito
+            if(str(type(f)) == "<class 'projection.Projection'>"):
+                f.step(playerList,fs.collisionList_hitbox(blocos.tiles,f.hitbox)[0])
+
+                if(f.t > 0):
+                    tup = list(f.draw())
+                    window.blit(tup[0], (tup[1] + camera.x, tup[2] + camera.y))
+                    
+                    #marcadores de h i t b o x.
+                    #window.blit(spr_cursor, (tup[1] + camera.x, tup[2] + camera.y))
+                    #window.blit(spr_cursor, (tup[1] + camera.x + tup[0].get_width(), tup[2] + tup[0].get_height() + camera.y))
+                    #marcadores de h i t b o x.
+                    
+                else:
+                    efeitos.remove(f)
+                    f.vanish()
+                    efeitos_deposito.append(f)
+            else:
+                f.draw() #Função de desenhar do efeito
+
+        camera.draw() #Função de desenhar da camera
+
+        for c in cartas:
+            c.draw() #Função de desenhar a carta
+
+
+        #FIM DOS DESENHOS NA TELA
+        #p = pg.transform.scale(window, (window.get_width() *raz, window.get_height() * raz))
+        #gamewindow.blit(window, (0, 0))
+        pg.display.flip() #mostra td oq foi desenhado dentro desse loop
+
+        #um loop que passa por tds os eventos registrados pelo pygame
+        #Tipos de eventos: clicar no mouse, apertar algo no teclado, fechar a janela e etc...
+        for eventos in pg.event.get():
+
+            #APERTOU A TECLA
+            if eventos.type == pg.KEYDOWN:
+
+                
+                if len(cartas) > 0:
+                    #PLAYER1
+                    if vez[0] == 0:
+                        if eventos.key == pg.K_a:
+                            card_selected = fs.loopValue(card_selected,0,len(cartas) - 1,-1)
+                        if eventos.key == pg.K_d:
+                            card_selected = fs.loopValue(card_selected,0,len(cartas) - 1,+1)
+                
+                    #SELECT CARD
+                        if eventos.key == pg.K_r or eventos.key == pg.K_t:
+                                escolhendo_cartas(jogador1)
+
+                    #PLAYER2        
+                    if vez[0] == 1: 
+                        if eventos.key == pg.K_LEFT:
+                            card_selected = fs.loopValue(card_selected,0,len(cartas) - 1,-1)
+                        if eventos.key == pg.K_RIGHT:
+                            card_selected = fs.loopValue(card_selected,0,len(cartas) - 1,+1)
+                    #SELECT CARD
+                        if eventos.key == pg.K_KP2 or eventos.key == pg.K_KP3:
+                            escolhendo_cartas(jogador2)
+
+                #ATTACK KEY
+                else:
+                    #PLAYER 1
+                    if eventos.key == pg.K_a: key[0] = True
+                    if eventos.key == pg.K_d: key[1] = True
+                    if eventos.key == pg.K_w: key[2] = True
+                    if eventos.key == pg.K_s: key[3] = True
+
+                    if eventos.key == pg.K_t:
+                        attack = True
+                        act[1] = True
+                    if eventos.key == pg.K_r: 
+                        act[0] = True
+
+                    #PLAYER 2    
+                    if eventos.key == pg.K_LEFT: key2[0] = True
+                    if eventos.key == pg.K_RIGHT: key2[1] = True
+                    if eventos.key == pg.K_UP: key2[2] = True
+                    if eventos.key == pg.K_DOWN: key2[3] = True
+
+                    if eventos.key == pg.K_KP3:
+                        attack2 = True
+                        act2[1] = True
+                    if eventos.key == pg.K_KP2: 
+                        act2[0] = True
+                #GERAL
+
+                #Ending Game
+                if eventos.key == pg.K_ESCAPE:
+                    INGAME = False
+                    PLAY = False
+
+            #SOLTOU A TECLA
+            if eventos.type == pg.KEYUP:
+
                 if eventos.key == pg.K_a:
-                    p1k = fs.clamp(p1k-1, 0, len(chars)-1)
+                    key[0] = False
                 if eventos.key == pg.K_d:
-                    p1k = fs.clamp(p1k+1, 0, len(chars)-1)
-                if eventos.key == pg.K_r:
-                    p1char = lchar[p1k]
-                    p1txt = lchar[p1k]
-                    beam_blue = chars_move.get(lchar[p1k])
+                    key[1] = False
+                if eventos.key == pg.K_w:
+                    key[2] = False
+                if eventos.key == pg.K_s:
+                    key[3] = False
 
                 if eventos.key == pg.K_LEFT:
-                    p2k = fs.clamp(p2k-1, 0, len(chars)-1)
+                    key2[0] = False
                 if eventos.key == pg.K_RIGHT:
-                    p2k = fs.clamp(p2k+1, 0, len(chars)-1)
-                if eventos.key == pg.K_KP2:
-                    p2char = lchar[p2k]
-                    p2txt = lchar[p2k]
-                    beam_red = chars_move.get(lchar[p2k])
-
-                if eventos.key == pg.K_SPACE:
-                    if(p1char != '' and p2char != ''):
-                        INCHARS = False
-                        INROUNDS = True
-                #INGAME = True
-                
-    pg.display.flip()
-
-MAXROUNDS = 1
-while INROUNDS:
-    window.blit(tbg, (rel_width/2, rel_height/2))
-    draw_text('Número máximo de Rounds:', window_width/2, window_height*1/5, color_ = WHITE, sc_ = 2)
-    draw_text(str(MAXROUNDS), window_width/2, window_height/2, color_ = WHITE, sc_ = 3)
-    draw_text('Espaço para confirmar', window_width/2 , window_height*3/5, color_ = WHITE, sc_ = 2)
-    for eventos in pg.event.get():
-        if eventos.type == pg.KEYDOWN:
-            if eventos.key == pg.K_a or eventos.key == pg.K_LEFT:
-                MAXROUNDS = fs.clamp(MAXROUNDS-2, 1, 19)
-            elif eventos.key == pg.K_d or eventos.key == pg.K_RIGHT:
-                MAXROUNDS = fs.clamp(MAXROUNDS+2, 1, 19)
-            elif eventos.key == pg.K_SPACE:
-                INROUNDS = False
-                INGAME = True
-
-    pg.display.flip()
-#CRIANDO O MAPA
-MAP = 'forest'
-blocos = TileMap(MAP, rel_width, rel_height)
-bg = pg.transform.scale(pg.image.load('Graphics/background/'+MAP+'.png').convert(),(window_width - rel_width - 64, window_height - rel_height-64))
-
-#CRIANDO ADEMAIS
-
-
-
-efeitos = []
-efeitos_deposito = []
-cartas = []
-cartas_deposito = []
-spawn_cards() #COMENTE E DESCOMENTE PARA SPAWNAR AS CARTAS
-card_selected = 0
-vez = [0,1] #lista que armazena a ordem de escolha de cartas
-points = [0,0]
-Round = 0
-
-#CRIANDO OS JOGADORES
-#wug args [8, 12, 16, 16, 48, 48, 48, 8], [54, 128]
-#homi args [8, 12, 16, 16, 32, 20, 32, 8], [0, 15]
-
-p1data = chd.GetCharAtributes(p1char)
-
-p2data = chd.GetCharAtributes(p2char)
-
-jogador1 = obj_jogador(250,450,0, p1char, p1data.get('F_rate'), p1data.get('Spr_offset'))
-jogador2 = obj_jogador(room_width - 250,450,1, p2char, p2data.get('F_rate'), p2data.get('Spr_offset'))
-jogador1.getStats(p1data)
-jogador2.getStats(p2data)
-playerList = [jogador1, jogador2]
-jogador1.enemy = jogador2
-jogador2.enemy = jogador1
-
-dash = False;attack = False
-dash2 = False;attack2 = False
-
-last_time = time.time()
-
-pg.mouse.set_visible(False)
-
-
-
-
-
-
-
-            
-            
-            
-
-
-while INGAME: #game loop
-    
-    #INGAME = False
-    dt = clock.tick(FPS) #SETS THE FPS
-
-    #dt_ = time.time() - last_time
-    #last_time = time.time()
-
-    window.fill((25, 25, 25)) #fundo da tela fica cinza escuro
-    window.blit(bg, (rel_width/2 + 32, rel_height/2 + 60)) #fundo da tela fica cinza escuro
-    window.blit(*(blocos.draw_map_mesh(window, rel_width/2, rel_height/2)))
-    #draw_text(str(int(200*dt_)/200),rel_width/2 + room_width/2,rel_height/2 + 230,color_ = (255,0,0))
-
-    #pg.display.set_caption("{}".format(clock.get_fps())) #mostra o fps no título da tela
-    #print(clock.get_fps())
-
-    draw_text("ROUND " + str(Round),rel_width/2 + room_width/2,rel_height/2 + 64,color_ = (0,255,0))
-    draw_text(str(points[0]) + " | " + str(points[1]),rel_width/2 + room_width/2,rel_height/2 + 130,color_ = (0,255,0))
-
-    #draw_text(str(int(clock.get_fps()*100)/100),rel_width/2 + room_width/2,rel_height/2 + 190,color_ = (0,255,0),font_ = fnt_comicsans[1])
-
-    #---CODIGO DO JOGADOR
-    jogador1.getPlayerInput(key, act)                   #Função para realizar o controle do jogador 1 com base nas inputs do teclado
-    jogador1.step()                                     #Função de cógido geral "step" do jogador1
-    jogador1.draw()                                     #Função de desenhar do jogador1
-
-    jogador2.getPlayerInput(key2, act2)                 #Função para realizar o controle do jogador 2 com base nas inputs do teclado
-    jogador2.step()                                     #Função de cógido geral "step" do jogador2
-    jogador2.draw()                                     #Função de desenhar do jogador2
-
-
-    if act[0] == True:
-        #Joga o player horizontalmente pra ultima direção que ele se moveu
-        dir_ = 180*(jogador1.hspeed > 0)
-
-        #Dexa um trail pra trás
-        #create_effect(jogador1.anim.getCurrentFrame(),jogador1.x,jogador1.y,
-        #8,speed_ = 10,direction_ = dir_)
-
-        #create_effect(jogador1.anim.getCurrentFrame(),jogador1.x + 10*fs.sign(jogador1.hspeed),jogador1.y,
-        #8,speed_ = 9,direction_ = dir_)
-
-        #create_effect(jogador1.anim.getCurrentFrame(),jogador1.x + 20*fs.sign(jogador1.hspeed),jogador1.y,
-        #8,speed_ = 8,direction_ = dir_)
-
-        #Só vai poder usar o dash dnv dps de um tempinho :(
-
-        act[0] = False
-        jogador1.dash_cooldown = jogador1.dash_time
-        dash = False
-
-
-    if act2[0] == True:
-        #Joga o player horizontalmente pra ultima direção que ele se moveu
-        dir_ = 180*(jogador2.hspeed > 0)
-
-        #Dexa um trail pra trás
-        #create_effect(jogador2.anim.getCurrentFrame(),jogador2.x,jogador2.y,
-        #8,speed_ = 10,direction_ = dir_)
-
-        #create_effect(jogador2.anim.getCurrentFrame(),jogador2.x + 10*fs.sign(jogador2.hspeed),jogador2.y,
-        #8,speed_ = 9,direction_ = dir_)
-
-        #create_effect(jogador2.anim.getCurrentFrame(),jogador2.x + 20*fs.sign(jogador2.hspeed),jogador2.y,
-        #8,speed_ = 8,direction_ = dir_)
-        #Só vai poder usar o dash dnv dps de um tempinho :(
-
-        act2[0] = False
-
-
-    if act[1] == True:
-        act[1] = False
-
-
-    if act2[1] == True:
-        act2[1] = False
-
-        jogador2.dash_cooldown = jogador2.dash_time
-        dash2 = False
-
-
-
-    #---CODIGO DOS BLOCOS
-    #Função de desenhar do bloco
-
-    #---CODIGOS ALEATORIOS
-    for f in efeitos:
-        #Função de cógido geral "step" do efeito
-        if(str(type(f)) == "<class 'projection.Projection'>"):
-            f.step(playerList,fs.collisionList_hitbox(blocos.tiles,f.hitbox)[0])
-
-            if(f.t > 0):
-                tup = list(f.draw())
-                window.blit(tup[0], (tup[1] + camera.x, tup[2] + camera.y))
-                
-                #marcadores de h i t b o x.
-                #window.blit(spr_cursor, (tup[1] + camera.x, tup[2] + camera.y))
-                #window.blit(spr_cursor, (tup[1] + camera.x + tup[0].get_width(), tup[2] + tup[0].get_height() + camera.y))
-                #marcadores de h i t b o x.
-                
-            else:
-                efeitos.remove(f)
-                f.vanish()
-                efeitos_deposito.append(f)
-        else:
-            f.draw() #Função de desenhar do efeito
-
-    camera.draw() #Função de desenhar da camera
-
-    for c in cartas:
-        c.draw() #Função de desenhar a carta
-
-
-    #FIM DOS DESENHOS NA TELA
-    #p = pg.transform.scale(window, (window.get_width() *raz, window.get_height() * raz))
-    #gamewindow.blit(window, (0, 0))
-    pg.display.flip() #mostra td oq foi desenhado dentro desse loop
-
-    #um loop que passa por tds os eventos registrados pelo pygame
-    #Tipos de eventos: clicar no mouse, apertar algo no teclado, fechar a janela e etc...
-    for eventos in pg.event.get():
-
-        #APERTOU A TECLA
-        if eventos.type == pg.KEYDOWN:
-
-            #PLAYER1
-
-            if eventos.key == pg.K_a:
-                if len(cartas) > 0 and vez[0] == 0:
-                    card_selected = fs.loopValue(card_selected,0,len(cartas) - 1,-1)
-                else:
-                    key[0] = True
-
-            if eventos.key == pg.K_d:
-                if len(cartas) > 0 and vez[0] == 0:
-                    card_selected = fs.loopValue(card_selected,0,len(cartas) - 1,+1)
-                else:
-                    key[1] = True
-
-            if eventos.key == pg.K_w: key[2] = True
-            if eventos.key == pg.K_s: key[3] = True
-
-            #DASH KEY / SELECT CARD
-            if eventos.key == pg.K_r:
-                if len(cartas) > 0 and vez[0] == 0:
-                    escolhendo_cartas(jogador1)
-                else:
-                    act[0] = True
-
-            #ATTACK KEY
-            if eventos.key == pg.K_t:
-                attack = True
-                act[1] = True
-
-            #PLAYER2
-
-            if eventos.key == pg.K_LEFT:
-                if len(cartas) > 0 and vez[0] == 1:
-                    card_selected = fs.loopValue(card_selected,0,len(cartas) - 1,-1)
-                else:
-                    key2[0] = True
-
-            if eventos.key == pg.K_RIGHT:
-                if len(cartas) > 0 and vez[0] == 1:
-                    card_selected = fs.loopValue(card_selected,0,len(cartas) - 1,+1)
-                else:
-                    key2[1] = True
-
-            if eventos.key == pg.K_UP: key2[2] = True
-            if eventos.key == pg.K_DOWN: key2[3] = True
-
-            #DASH KEY / SELECT CARD
-            if eventos.key == pg.K_KP2:
-                if len(cartas) > 0 and vez[0] == 1:
-                    escolhendo_cartas(jogador2)
-                else:
-                    act2[0] = True
-
-            #ATTACK KEY
-            if eventos.key == pg.K_KP3:
-                attack2 = True
-                act2[1] = True
-
-            #GERAL
-
-            #Ending Game
-            if eventos.key == pg.K_ESCAPE:
+                    key2[1] = False
+                if eventos.key == pg.K_UP:
+                    key2[2] = False
+                if eventos.key == pg.K_DOWN:
+                    key2[3] = False
+
+            #FECHOU A JANELA
+            if eventos.type == pg.QUIT:
                 INGAME = False
+                PLAY = False
 
-        #SOLTOU A TECLA
-        if eventos.type == pg.KEYUP:
-
-            if eventos.key == pg.K_a:
-                key[0] = False
-            if eventos.key == pg.K_d:
-                key[1] = False
-            if eventos.key == pg.K_w:
-                key[2] = False
-            if eventos.key == pg.K_s:
-                key[3] = False
-
-            if eventos.key == pg.K_LEFT:
-                key2[0] = False
-            if eventos.key == pg.K_RIGHT:
-                key2[1] = False
-            if eventos.key == pg.K_UP:
-                key2[2] = False
-            if eventos.key == pg.K_DOWN:
-                key2[3] = False
-
-        #FECHOU A JANELA
-        if eventos.type == pg.QUIT:
+        if(Round > MAXROUNDS and VICTORY_DELAY <= 0):
+            INVICTORY = True
             INGAME = False
+
+    winnerstr = 'Vitória do Jogador 1!!!'
+    winAN = chars_move.get(p1char) 
+    if(points[1] > points[0]): 
+        winnerstr = 'Vitória do Jogador 2!!!'
+        winAN = chars_move.get(p2char)
+    elif(points[1] == points[0]):
+        winnerstr = 'Ué... deu empate?'
+        winAN = an.Animation('', 10, 'Graphics/Charselect', '', 'podbeamb_')
+
+    while INVICTORY:
+        dt = clock.tick(FPS)
+        window.blit(tbg, (rel_width/2, rel_height/2))
+        draw_text(winnerstr, window_width/2, window_height*1/5, color_ = WHITE, sc_ = 4)
+        window.blit(podium, (window_width/2 - podium.get_width()/2,  window_height/2 + podium.get_height()))
+        window.blit(winAN.play(), (window_width/2 - winAN.play().get_width()/2, window_height/2))
+        camera.draw()
+        pg.display.flip()
+        for eventos in pg.event.get():
+            if eventos.type == pg.KEYDOWN:
+                TITLE = True
+                INVICTORY = False
+
         
 
 #FIM
