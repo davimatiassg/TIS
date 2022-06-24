@@ -322,7 +322,7 @@ class obj_jogador(object):
             y_ = room_height - 64
 '''
         atk_args = (self,self.x + self.hit_box.width/2,
-            y_, 0, ctxt.SPIKES_ATIME/60, ctxt.SPIKES_DAMAGE, 1.3, self.ATKFX)
+            y_, 0, ctxt.SPIKES_ATIME/60, ctxt.SPIKES_DAMAGE, 1.2, 1, self.ATKFX)
         efeitos.append(fxd.fxSpawn('spikes', atk_args))
 
     def restart(self):
@@ -1008,37 +1008,64 @@ podium = pg.transform.scale(podium, (int(podium.get_width()/64 *(window_width - 
 chars = {}
 chars_move = {}
 for i in chd.CharacterSelection.keys():
-    chars.update({i: pg.image.load('Graphics/Charselect/charport/'+  i + '.png').convert_alpha()})
-    chars_move.update({i: an.Animation(i, 10, 'Graphics/Charselect/charport/', '', i +'_')})
+    chars.update({i: pg.transform.scale(pg.image.load('Graphics/Charselect/charport/'+  i + '.png').convert_alpha(), (128, 128))})
+    chars_move.update({i: an.Animation(i, 16, 'Graphics/Charselect/charport/', '', i +'_')})
 
-p1port = pg.image.load('Graphics/Charselect/p1.png').convert_alpha()
-p2port = pg.image.load('Graphics/Charselect/p2.png').convert_alpha()
-
-
+p1port = pg.transform.scale(pg.image.load('Graphics/Charselect/p1.png').convert_alpha(),  (128, 128))
+p2port = pg.transform.scale(pg.image.load('Graphics/Charselect/p2.png').convert_alpha(),  (128, 128))
+p1k = 0
+p2k = 0
+fst_portrait_pos_x = window_width/2 - (chars.get('homi').get_width()+8)*len(chars)/2
+fst_portrait_pos_y = window_height - rel_height - podium.get_height()
+p1txt = "'r' para escolher"
+p2txt = "'2' para escolher"
+lchar = list(chars.keys())
 while INCHARS:
+    bb = beam_blue.play()
+    br = beam_red.play()
     dt = clock.tick(FPS)
     window.blit(tbg, (rel_width/2, rel_height/2))
     window.blit(podium, (rel_width/2 + 20,  window_height - rel_height - podium.get_height()))
-    window.blit(podium, (window_width - rel_width/2 -  podium.get_width() - 20,  window_height - rel_height - podium.get_height()))
-    camera.draw()
-    pg.display.flip()
-    for k in chars.keys():
-        ki = list(chars.keys()).index(k)
-        p1k = 0
-        p2k = 0
-        window.blit(chars.get(k), (8 + rel_width/2 +(ki - 7*(ki//7))*(chars.get(k).get_width()+8), rel_height/2 + 96 + (ki//7)*(chars.get(k).get_height()+8)))
-        window.blit(p1port, (8 + rel_width/2 +(p1k - 7*(p1k//7))*(p1port.get_width()+8), rel_height/2 + 96 + (p1k//7)*(p1port.get_height()+8)))
-        window.blit(p2port, (8 + rel_width/2 +(p2k - 7*(p2k//7))*(p2port.get_width()+8), rel_height/2 + 96 + (p1k//7)*(p2port.get_height()+8)))
-            
-                    
-    for eventos in pg.event.get():
-        if eventos.type == pg.KEYDOWN or eventos.type == pg.QUIT:
-            INCHARS = False
-            if eventos.key != pg.K_ESCAPE:
-                INGAME = True
-            else:
-                quit()
+    window.blit(bb, (rel_width/2 + 20 + abs(podium.get_width()-bb.get_width())/2,  window_height - rel_height*3/4 - podium.get_height() - bb.get_height()))
 
+    window.blit(podium, (window_width - rel_width/2 -  podium.get_width() - 20,  window_height - rel_height - podium.get_height()))
+    window.blit(pg.transform.flip(br, True, False), (window_width -20 - rel_width/2 -  podium.get_width() + (podium.get_width()-br.get_width())/2,  window_height - rel_height*3/4 - podium.get_height() -br.get_height()))
+    camera.draw()
+    
+    for k in chars.keys():
+        ki = lchar.index(k)
+        #8 + rel_width/2 +(ki - 7*(ki//7))*(chars.get(k).get_width()+8), rel_height/2 + 96 + (ki//7)*(chars.get(k).get_height()+8))
+        window.blit(chars.get(k), (fst_portrait_pos_x + ki*(chars.get(k).get_width()+8), fst_portrait_pos_y + (ki//5)*(chars.get(k).get_width()+8)))
+    
+    window.blit(p1port, (fst_portrait_pos_x + p1k*(p1port.get_width()+8), fst_portrait_pos_y + (p1k//5)*(p1port.get_width()+8)))
+    window.blit(p2port, (fst_portrait_pos_x + p2k*(p2port.get_width()+8), fst_portrait_pos_y + (p2k//5)*(p2port.get_width()+8)))
+
+    draw_text(p1txt, rel_width/2 + 20 + podium.get_width()/2,  window_height - rel_height - podium.get_height()/3, color_ = BLACK)
+    draw_text(p2txt, window_width - rel_width/2 -  podium.get_width()/2 - 20, window_height - rel_height - podium.get_height()/3, color_ = BLACK)
+    pg.display.flip()                   
+    for eventos in pg.event.get():
+        if eventos.type == pg.KEYDOWN:
+            if eventos.key != pg.K_ESCAPE:
+                if eventos.key == pg.K_a:
+                    p1k = fs.clamp(p1k-1, 0, len(chars)-1)
+                if eventos.key == pg.K_d:
+                    p1k = fs.clamp(p1k+1, 0, len(chars)-1)
+                if eventos.key == pg.K_r:
+                    p1char = lchar[p1k]
+                    p1txt = lchar[p1k]
+                    beam_blue = chars_move.get(lchar[p1k])
+
+                if eventos.key == pg.K_LEFT:
+                    p2k = fs.clamp(p2k-1, 0, len(chars)-1)
+                if eventos.key == pg.K_RIGHT:
+                    p2k = fs.clamp(p2k+1, 0, len(chars)-1)
+                if eventos.key == pg.K_KP2:
+                    p2char = lchar[p2k]
+                    p2txt = lchar[p2k]
+                    beam_red = chars_move.get(lchar[p2k])
+                #INGAME = True
+            else:
+                INCHARS = False
 
 #CRIANDO O MAPA
 MAP = 'forest'
