@@ -1,9 +1,19 @@
 #FUNÇÕES
 
+import pygame as pg
+
 def sign(value_): #RETORNA O SINAL DO VALOR PASSADO
     if value_ != 0:
         return value_/abs(value_)
     return 0 #0 se n for nem positivo nem negativo
+
+def divs(value_1,value_2):
+    return int(int(value_1)/int(value_2)) == int(value_1)/int(value_2)
+
+def clamp(value_,min_,max_):
+    if value_ > max_: return max_
+    if value_ < min_: return min_
+    return value_
 
 def pointDistance(x1,y1,x2,y2): #RETORNA A DISTANCIA ENTRE DOIS PONTOS
     return ((x1 - x2)**2 + (y1 - y2)**2)**(1/2)
@@ -25,10 +35,43 @@ def collisionList(collidee_list,tuple_xy):
 
     return [False,-1]
 
+def collisionList_hitbox(collidee_list,outro_rect_):
+
+    #RETORNA UMA LISTA COM [TA COLIDINDO OU NÃO?, QUEM EU TO COLIDINDO]
+
+    #Verifica se ta colidindo com cada elemento de collidee_list
+    for collidee_ in collidee_list:
+        if collidee_.hit_box.colliderect(outro_rect_) == True:
+            return [True,collidee_] #Se ta colidindo com pelomenos 1
+
+    return [False,-1]
+
 #Loops values
 def loopValue(value_,min_,max_,_speed):
     #print('current {}; framerate {}; nxt{}'.format(value_,_speed, value_+_speed) )
     if value_ + _speed <= max_:
-        return value_ + _speed
+        if value_ + _speed >= min_:
+            return value_ + _speed
+        else:
+            return max_
     else:
         return min_
+
+def loopAnim(value_,min_,max_,_speed):
+    #print('current {}; framerate {}; nxt{}'.format(value_,_speed, value_+_speed) )
+    if value_ + _speed <= max_+0.5:
+        if value_ + _speed >= min_-0.5:
+            return value_ + _speed
+        else:
+            return max_
+    else:
+        return min_
+
+#Loops values
+def getAllRects():
+    r = []
+    for i in globals():
+        if type(i) is type(pg.Rect(0, 0, 0, 0)):
+            r.append(i)
+
+    return r

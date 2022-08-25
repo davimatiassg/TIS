@@ -1,0 +1,14 @@
+{ "columns":6,
+ "image":"..\/Graphics\/level_forest\/tileset1.png",
+ "imageheight":48,
+ "imagewidth":96,
+ "margin":0,
+ "name":"forest",
+ "spacing":0,
+ "tilecount":18,
+ "tiledversion":"1.8.5",
+ "tileheight":16,
+ "tilewidth":16,
+ "type":"tileset",
+ "version":"1.8"
+}
